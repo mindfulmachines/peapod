@@ -6,6 +6,7 @@ import java.net.URI
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.hadoop.io.compress.BZip2Codec
 import org.apache.hadoop.io.{BytesWritable, NullWritable}
+import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.storage.StorageLevel
@@ -30,36 +31,36 @@ object StorableTask {
 
 }
 abstract class StorableTask[V: ClassTag](implicit val p: Peapod)
-  extends Task[V] {
+  extends Task[V] with Logging {
   protected def generate: V
 
   protected[dependency] def build(): V = {
-    println("Loading" + dir)
-    println("Loading" + dir + " Exists: " + exists)
+    logInfo("Loading" + dir)
+    logInfo("Loading" + dir + " Exists: " + exists)
     val rdd = if(! exists()) {
       val rddGenerated = generate
-      println("Loading" + dir + " Deleting")
+      logInfo("Loading" + dir + " Deleting")
       delete()
-      println("Loading" + dir + " Generating")
+      logInfo("Loading" + dir + " Generating")
       write(rddGenerated)
       rddGenerated
       read() match {
         case Some(v) => v
         case None =>
-          println("Loading" + dir + " Generating")
+          logInfo("Loading" + dir + " Generating")
           rddGenerated
       }
     } else {
-      println("Loading" + dir + " Reading")
+      logInfo("Loading" + dir + " Reading")
       read() match {
         case Some(v) => v
         case None =>
-          println("Loading" + dir + " Generating")
+          logInfo("Loading" + dir + " Generating")
           generate
       }
     }
     if(shouldPersist()) {
-      println("Loading" + dir + " Persisting")
+      logInfo("Loading" + dir + " Persisting")
       persist(rdd)
     } else {
       rdd
@@ -111,7 +112,7 @@ abstract class StorableTask[V: ClassTag](implicit val p: Peapod)
         fs.createNewFile(new Path(dir + "/_SUCCESS"))
         objWriter.close()
         fs.close()
-      case _ => println("Loading" + dir + " Not Writable")
+      case _ => logInfo("Loading" + dir + " Not Writable")
     }
   }
   protected def persist(v: V): V = {
@@ -119,7 +120,7 @@ abstract class StorableTask[V: ClassTag](implicit val p: Peapod)
       case rdd: RDD[_] => rdd.persist(StorageLevel.MEMORY_AND_DISK).asInstanceOf[V]
       case df: DataFrame => df.cache().asInstanceOf[V]
       case _ =>
-        println("Loading" + dir + " Not Persistable")
+        logInfo("Loading" + dir + " Not Persistable")
         v
     }
   }
