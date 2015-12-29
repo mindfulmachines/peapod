@@ -96,7 +96,7 @@ abstract class StorableTask[V: ClassTag](implicit val p: Peapod)
       fs.close()
       Some(obj.asInstanceOf[V])
     } else {
-      println("Loading" + dir + " Not Readable")
+      logInfo("Loading" + dir + " Not Readable")
       None
     }
   }
