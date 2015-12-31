@@ -31,7 +31,7 @@ abstract class Task [T: ClassTag](implicit p: Peapod) {
 
   protected[dependency] def build(): T
 
-  protected def peas[D <: Task[_]](d: D): D = {
+  protected def pea[D <: Task[_]](d: D): D = {
     pods += d
     d
   }
