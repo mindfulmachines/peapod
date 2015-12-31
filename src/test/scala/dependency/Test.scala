@@ -34,7 +34,7 @@ object Test {
 
   class Parsed(implicit _p: Peapod) extends EphemeralTask[DataFrame] {
     import p.sqlCtx.implicits._
-    val raw = pod(new Raw)
+    val raw = peas(new Raw)
     def generate = {
       upRuns()
       raw.get().df
@@ -42,7 +42,7 @@ object Test {
   }
 
   class PipelineFeature(implicit _p: Peapod) extends StorableTask[PipelineModel] {
-    val parsed = pod(new Parsed)
+    val parsed = peas(new Parsed)
     override val version = "2"
     def generate = {
       upRuns()
@@ -65,8 +65,8 @@ object Test {
   }
 
   class PipelineLR(implicit _p: Peapod) extends StorableTask[PipelineModel] {
-    val pipelineFeature = pod(new PipelineFeature())
-    val parsed = pod(new Parsed)
+    val pipelineFeature = peas(new PipelineFeature())
+    val parsed = peas(new Parsed)
     def generate = {
       upRuns()
       val training = parsed.get()
@@ -82,9 +82,9 @@ object Test {
   }
 
   class AUC(implicit _p: Peapod) extends StorableTask[Double] {
-    val pipelineLR = pod(new PipelineLR())
-    val pipelineFeature = pod(new PipelineFeature())
-    val parsed = pod(new Parsed)
+    val pipelineLR = peas(new PipelineLR())
+    val pipelineFeature = peas(new PipelineFeature())
+    val parsed = peas(new Parsed)
     def generate = {
       upRuns()
       val training = parsed.get()
