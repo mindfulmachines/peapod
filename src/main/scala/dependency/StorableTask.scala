@@ -29,8 +29,41 @@ object StorableTask {
       .saveAsSequenceFile(path, Some(classOf[BZip2Codec]))
   }
 
+  implicit class DataFrameStorable[V <: DataFrame](df: V) extends Storable[V] {
+    def readStorable(path: String): V = {
+
+    }
+    def writeStorable(path: String) = {
+
+    }
+  }
+
+  implicit class RDDStorable[V <: RDD[_]](df: V) extends Storable[V] {
+    def readStorable(path: String): V = {
+
+    }
+    def writeStorable(path: String) = {
+
+    }
+  }
+
+  implicit class SerializableStorable[V <: Serializable](df: V) extends Storable[V] {
+    def readStorable(path: String): V = {
+
+    }
+    def writeStorable(path: String) = {
+
+    }
+  }
+
 }
-abstract class StorableTask[V: ClassTag](implicit val p: Peapod)
+
+trait Storable[V] {
+  def readStorable(path: String): V
+  def writeStorable(path: String)
+}
+
+abstract class StorableTask[V <: Storable: ClassTag](implicit val p: Peapod)
   extends Task[V] with Logging {
   protected def generate: V
 
