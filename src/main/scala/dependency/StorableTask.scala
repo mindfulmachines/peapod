@@ -5,11 +5,12 @@ import java.net.URI
 
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.hadoop.io.compress.BZip2Codec
-import org.apache.hadoop.io.{BytesWritable, NullWritable}
-import org.apache.spark.Logging
+import org.apache.hadoop.io._
+import org.apache.spark.{SparkContext, Logging}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.storage.StorageLevel
+import scala.reflect._
 
 import scala.reflect.ClassTag
 
@@ -29,42 +30,103 @@ object StorableTask {
       .saveAsSequenceFile(path, Some(classOf[BZip2Codec]))
   }
 
-  implicit class DataFrameStorable[V <: DataFrame](df: V) extends Storable[V] {
-    def readStorable(path: String): V = {
-
+  class DataFrameStorable(df: DataFrame) extends Storable[DataFrame] {
+    def readStorable(p: Peapod, fs: String, path: String): DataFrame = {
+      if(fs.startsWith("s3n")) {
+        //There's a bug in the parquet reader for S3 so it doesn't properly get the hadoop configuration key and secret
+        val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
+        val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
+          p.sqlCtx.read.parquet(fs + awsKey + ":" + awsSecret + "@" + path)
+      } else {
+          p.sqlCtx.read.parquet(fs + path)
+      }
     }
-    def writeStorable(path: String) = {
+    def writeStorable(p: Peapod, fs: String, path: String) = {
+      df.write.parquet(fs + path)
+    }
+    override def persistStorable(): DataFrame = {
+      df.cache()
+    }
+  }
 
+  class RDDStorable[W: ClassTag](rdd: RDD[W]) extends Storable[RDD[W]] {
+    def readStorable(p: Peapod, fs: String, path: String): RDD[W] = {
+      p.sc.objectFile[W](fs + path)
+    }
+    def writeStorable(p: Peapod, fs: String, path: String) = {
+      StorableTask.saveAsCompressedObjectFile(rdd, fs + path)
+    }
+    override def persistStorable(): RDD[W] = {
+      rdd.persist(StorageLevel.MEMORY_AND_DISK)
     }
   }
 
-  implicit class RDDStorable[V <: RDD[_]](df: V) extends Storable[V] {
-    def readStorable(path: String): V = {
-
+  class SerializableStorable[V <: Serializable: ClassTag](s: V) extends Storable[V] {
+    def readStorable(p: Peapod, fs: String, path: String): V = {
+      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
+      val in = filesystem.open(new Path(fs + path + "/serialized.dat"))
+      val objReader = new ObjectInputStream(in)
+      val obj = objReader.readObject().asInstanceOf[V]
+      in.close()
+      filesystem.close()
+      obj
     }
-    def writeStorable(path: String) = {
-
+    def writeStorable(p: Peapod, fs: String, path: String) = {
+      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
+      val out = filesystem.create(new Path(path + "/serialized.dat"))
+      val objWriter = new ObjectOutputStream(out)
+      objWriter.writeObject(s)
+      objWriter.close()
+      filesystem.close()
     }
+    def persistStorable() = s
   }
 
-  implicit class SerializableStorable[V <: Serializable](df: V) extends Storable[V] {
-    def readStorable(path: String): V = {
-
+  class WritableStorable[V <: Writable: ClassTag](s: V) extends Storable[V] {
+    def readStorable(p: Peapod, fs: String, path: String): V = {
+      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
+      val in = filesystem.open(new Path(fs + path + "/serialized.dat"))
+      val objReader = new ObjectInputStream(in)
+      val obj = classTag[V].runtimeClass.newInstance().asInstanceOf[V]
+      obj.readFields(in)
+      in.close()
+      filesystem.close()
+      obj
     }
-    def writeStorable(path: String) = {
-
+    def writeStorable(p: Peapod, fs: String, path: String) = {
+      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
+      val out = filesystem.create(new Path(path + "/serialized.dat"))
+      val objWriter = new ObjectOutputStream(out)
+      s.write(objWriter)
+      objWriter.close()
+      filesystem.close()
     }
+    def persistStorable() = s
   }
+
+
+  implicit def dfToStorable(df: DataFrame): Storable[DataFrame] =
+    new DataFrameStorable(df)
+  implicit def rddToStorable[W: ClassTag, V <: RDD[W]](rdd: V): Storable[RDD[W]] =
+    new RDDStorable[W](rdd)
+  implicit def serializableToStorable[V <: Serializable: ClassTag](s: V): Storable[V] =
+    new SerializableStorable[V](s)
+  implicit def writableToStorable[V <: Writable: ClassTag](s: V): Storable[V] =
+    new WritableStorable[V](s)
+
 
 }
+
 
 trait Storable[V] {
-  def readStorable(path: String): V
-  def writeStorable(path: String)
+  def readStorable(p: Peapod, fs: String, path: String): V
+  def writeStorable(p: Peapod, fs: String, path: String)
+  def persistStorable(): V
 }
 
-abstract class StorableTask[V <: Storable: ClassTag](implicit val p: Peapod)
-  extends Task[V] with Logging {
+
+abstract class StorableTaskBase[V : ClassTag](implicit val p: Peapod)
+  extends Task[V] with Logging  {
   protected def generate: V
 
   protected[dependency] def build(): V = {
@@ -76,21 +138,11 @@ abstract class StorableTask[V <: Storable: ClassTag](implicit val p: Peapod)
       delete()
       logInfo("Loading" + dir + " Generating")
       write(rddGenerated)
-      rddGenerated
-      read() match {
-        case Some(v) => v
-        case None =>
-          logInfo("Loading" + dir + " Generating")
-          rddGenerated
-      }
+      writeSuccess()
+      read()
     } else {
       logInfo("Loading" + dir + " Reading")
-      read() match {
-        case Some(v) => v
-        case None =>
-          logInfo("Loading" + dir + " Generating")
-          generate
-      }
+      read()
     }
     if(shouldPersist()) {
       logInfo("Loading" + dir + " Persisting")
@@ -99,65 +151,14 @@ abstract class StorableTask[V <: Storable: ClassTag](implicit val p: Peapod)
       rdd
     }
   }
-
-  protected def read(): Option[V] = {
-    if (classOf[RDD[_]].isAssignableFrom(implicitly[ClassTag[V]].runtimeClass)) {
-      Some(
-        p.sc.objectFile[V](dir, p.parallelism).asInstanceOf[V]
-      )
-    } else if (classOf[DataFrame].isAssignableFrom(implicitly[ClassTag[V]].runtimeClass)) {
-      if(p.fs.startsWith("s3n")) {
-        //There's a bug in the parquet reader for S3 so it doesn't properly get the hadoop configuration key and secret
-        val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
-        val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
-        Some(
-          p.sqlCtx.read.parquet(p.fs + awsKey + ":" + awsSecret + "@" + p.path + "/" + name + "/" + recursiveVersionShort).asInstanceOf[V]
-        )
-      } else {
-        Some(
-          p.sqlCtx.read.parquet(dir).asInstanceOf[V]
-        )
-      }
-    } else if (
-      classOf[Serializable].isAssignableFrom(implicitly[ClassTag[V]].runtimeClass)
-    ) {
-      val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
-      val in = fs.open(new Path(dir + "/serialized.dat"))
-      val objReader = new ObjectInputStream(in)
-      val obj = objReader.readObject().asInstanceOf[V]
-      in.close()
-      fs.close()
-      Some(obj.asInstanceOf[V])
-    } else {
-      logInfo("Loading" + dir + " Not Readable")
-      None
-    }
+  protected def read(): V
+  protected def write(v: V): Unit
+  protected def persist(v: V): V
+  private def writeSuccess(): Unit = {
+    val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
+    filesystem.createNewFile(new Path(dir + "/_SUCCESS"))
+    filesystem.close()
   }
-  protected def write(v: V): Unit = {
-    v match {
-      case rdd: RDD[_] => StorableTask.saveAsCompressedObjectFile(rdd, dir)
-      case df: DataFrame => df.write.parquet(dir)
-      case s: Serializable =>
-        val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
-        val out = fs.create(new Path(dir + "/serialized.dat"))
-        val objWriter = new ObjectOutputStream(out)
-        objWriter.writeObject(s)
-        fs.createNewFile(new Path(dir + "/_SUCCESS"))
-        objWriter.close()
-        fs.close()
-      case _ => logInfo("Loading" + dir + " Not Writable")
-    }
-  }
-  protected def persist(v: V): V = {
-    v match {
-      case rdd: RDD[_] => rdd.persist(StorageLevel.MEMORY_AND_DISK).asInstanceOf[V]
-      case df: DataFrame => df.cache().asInstanceOf[V]
-      case _ =>
-        logInfo("Loading" + dir + " Not Persistable")
-        v
-    }
-  }
-
   protected def delete() {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     fs.delete(new Path(dir), true)
@@ -166,5 +167,21 @@ abstract class StorableTask[V <: Storable: ClassTag](implicit val p: Peapod)
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     fs.isFile(new Path(dir + "/_SUCCESS"))
   }
+}
+
+abstract class StorableTask[V : ClassTag](implicit p: Peapod, c: V => Storable[V])
+  extends StorableTaskBase[V] {
+
+  protected def read(): V = {
+    c(null.asInstanceOf[V])
+      .readStorable(p,p.fs,p.path + "/" + name + "/" + recursiveVersionShort)
+  }
+  protected def write(v: V): Unit = {
+    v.writeStorable(p,p.fs,p.path + "/" + name + "/" + recursiveVersionShort)
+  }
+  protected def persist(v: V): V = {
+    v.persistStorable()
+  }
+
 
 }

@@ -13,6 +13,7 @@ import org.apache.spark.ml.feature.{HashingTF, StopWordsRemover, Tokenizer}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.scalatest.FunSuite
+import StorableTask._
 
 object Test {
   var runs = 0
@@ -82,7 +83,7 @@ object Test {
     }
   }
 
-  class AUC(implicit _p: Peapod) extends StorableTask[Double] {
+  class AUC(implicit _p: Peapod) extends EphemeralTask[Double] {
     val pipelineLR = pea(new PipelineLR())
     val pipelineFeature = pea(new PipelineFeature())
     val parsed = pea(new Parsed)
