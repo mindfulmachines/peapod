@@ -25,10 +25,10 @@ class RawPages(implicit _p: Peapod) extends StorableTask[RDD[(Long, String)]] {
     readWikiDump(p.sc, p.fs + p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
 }
 ```
-Then you can create other tasks which depend on this task. You use the dep() method to wrap a task to have it be a dependency of the current task. You can then use the get() method of the dependency to access the output of the dependencies generate method. The outputs are cached so even if you create multiple instances of a Task (within a single Peapod, we'll get to that in a bit) their get methods will all point to the same data.
+Then you can create other tasks which depend on this task. You use the pea() method to wrap a task to have it be a dependency of the current task. You can then use the get() method of the dependency to access the output of the dependencies generate method. The outputs are cached so even if you create multiple instances of a Task (within a single Peapod, we'll get to that in a bit) their get methods will all point to the same data.
 ```
 class ParsedPages(implicit _p: Peapod) extends StorableTask[RDD[Page]] {
-  val rawPages = dep(new RawPages())
+  val rawPages = pea(new RawPages())
   def generate =
     parsePages(rawPages.get()).map(_._2)
         //Remove duplicate pages with the same title
