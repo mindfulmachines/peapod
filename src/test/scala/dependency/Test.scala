@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.google.common.io.Resources
+import org.apache.hadoop.io.DoubleWritable
 import org.apache.spark.api.java.StorageLevels
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.classification.LogisticRegression
@@ -83,7 +84,7 @@ object Test {
     }
   }
 
-  class AUC(implicit _p: Peapod) extends EphemeralTask[Double] {
+  class AUC(implicit _p: Peapod) extends StorableTask[DoubleWritable] {
     val pipelineLR = pea(new PipelineLR())
     val pipelineFeature = pea(new PipelineFeature())
     val parsed = pea(new Parsed)
@@ -93,7 +94,7 @@ object Test {
       val transformed = pipelineFeature.get().transform(training)
       val predictions = pipelineLR.get().transform(transformed)
       val evaluator = new BinaryClassificationEvaluator()
-      evaluator.evaluate(predictions)
+      new DoubleWritable(evaluator.evaluate(predictions))
     }
   }
 }
@@ -109,11 +110,11 @@ class Test extends FunSuite {
       fs="file://",
       path=path,
       raw="")
-    println(new Test.AUC().get())
+    println(new Test.AUC().get().get())
     assert(Test.runs == 5)
     Test.runs = 0
-    println(new Test.AUC().get())
-    assert(Test.runs == 2)
+    println(new Test.AUC().get().get())
+    assert(Test.runs == 0)
     Test.runs = 0
     println(new Test.Parsed().get())
     assert(Test.runs == 1)
