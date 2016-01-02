@@ -35,7 +35,16 @@ object Test {
     }
   }
 
-  class Parsed(implicit _p: Peapod) extends EphemeralTask[DataFrame] {
+  class Parsed(implicit _p: Peapod) extends StorableTask[DataFrame] {
+    import p.sqlCtx.implicits._
+    val raw = pea(new Raw)
+    def generate = {
+      upRuns()
+      raw.get().df
+    }
+  }
+
+  class ParsedEphemeral(implicit _p: Peapod) extends EphemeralTask[DataFrame] {
     import p.sqlCtx.implicits._
     val raw = pea(new Raw)
     def generate = {
@@ -116,7 +125,7 @@ class Test extends FunSuite {
     println(new Test.AUC().get())
     assert(Test.runs == 0)
     Test.runs = 0
-    println(new Test.Parsed().get())
+    println(new Test.ParsedEphemeral().get())
     assert(Test.runs == 1)
   }
 }
