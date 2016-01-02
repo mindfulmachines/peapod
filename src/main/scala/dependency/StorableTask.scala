@@ -44,9 +44,6 @@ object StorableTask {
     def writeStorable(p: Peapod, fs: String, path: String) = {
       df.write.parquet(fs + path)
     }
-    override def persistStorable(): DataFrame = {
-      df.cache()
-    }
   }
 
   class RDDStorable[W: ClassTag](rdd: RDD[W]) extends Storable[RDD[W]] {
@@ -55,9 +52,6 @@ object StorableTask {
     }
     def writeStorable(p: Peapod, fs: String, path: String) = {
       StorableTask.saveAsCompressedObjectFile(rdd, fs + path)
-    }
-    override def persistStorable(): RDD[W] = {
-      rdd.persist(StorageLevel.MEMORY_AND_DISK)
     }
   }
 
@@ -79,7 +73,6 @@ object StorableTask {
       objWriter.close()
       filesystem.close()
     }
-    def persistStorable() = s
   }
 
   class WritableConvertedStorable[V : ClassTag, W <: Writable: ClassTag]
@@ -100,7 +93,6 @@ object StorableTask {
       out.close()
       filesystem.close()
     }
-    def persistStorable() = s
   }
 
 
@@ -121,7 +113,6 @@ object StorableTask {
 trait Storable[V] {
   def readStorable(p: Peapod, fs: String, path: String): V
   def writeStorable(p: Peapod, fs: String, path: String)
-  def persistStorable(): V
 }
 
 
@@ -132,7 +123,7 @@ abstract class StorableTaskBase[V : ClassTag](implicit val p: Peapod)
   protected[dependency] def build(): V = {
     logInfo("Loading" + dir)
     logInfo("Loading" + dir + " Exists: " + exists)
-    val rdd = if(! exists()) {
+    val generated = if(! exists()) {
       val rddGenerated = generate
       logInfo("Loading" + dir + " Deleting")
       delete()
@@ -146,14 +137,20 @@ abstract class StorableTaskBase[V : ClassTag](implicit val p: Peapod)
     }
     if(shouldPersist()) {
       logInfo("Loading" + dir + " Persisting")
-      persist(rdd)
+      persist(generated)
     } else {
-      rdd
+      generated
     }
   }
   protected def read(): V
   protected def write(v: V): Unit
-  protected def persist(v: V): V
+  def persist(generated: V): V = {
+    generated match {
+      case g: RDD[_] => g.persist(StorageLevel.MEMORY_AND_DISK).asInstanceOf[V]
+      case g: DataFrame => g.cache().asInstanceOf[V]
+      case _ => generated
+    }
+  }
   private def writeSuccess(): Unit = {
     val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     filesystem.createNewFile(new Path(dir + "/_SUCCESS"))
@@ -179,9 +176,5 @@ abstract class StorableTask[V : ClassTag](implicit p: Peapod, c: V => Storable[V
   protected def write(v: V): Unit = {
     v.writeStorable(p,p.fs,p.path + "/" + name + "/" + recursiveVersionShort)
   }
-  protected def persist(v: V): V = {
-    v.persistStorable()
-  }
-
 
 }
