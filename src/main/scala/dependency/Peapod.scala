@@ -49,5 +49,13 @@ class Peapod(val fs: String = "s3n://",
     )
     f
   }
+  def dotFormatDiagram(): String = {
+    "digraph G {" +
+    dependencies.map(
+      kv => kv._2.map("\"" + _ + "\"->\"" + kv._1 + "\";").mkString("\n")
+    )
+    .mkString("\n") +
+    "}"
+  }
 }
 
