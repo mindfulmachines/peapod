@@ -60,15 +60,10 @@ class Peapod(val fs: String = "s3n://",
     f
   }
   def dotFormatDiagram(): String = {
-    "digraph G {" +
-    "node [shape=box];" +
-    peaLinks.map(
-      kv => kv._2.map("\"" + _ + "\"->\"" + kv._1 + "\";").mkString("\n")
-    )
-    .mkString("\n") +
-    "{ rank=same;" + peaLinks.filter(kv => ! reversePeaLinks.contains(kv._1)).map("\"" + _._1 + "\"").mkString(" ") + "}" +
-    "{ rank=same;" + reversePeaLinks.filter(kv => ! peaLinks.contains(kv._1)).map("\"" + _._1 + "\"").mkString(" ") + "}" +
-    "}"
+    DotFormatter.format(peaLinks.flatMap(d => d._2.map((d._1,_))).toList)
+  }
+  def dotFormatActiveDiagram(): String = {
+    DotFormatter.format(activePeaLinks.flatMap(d => d._2.map((d._1,_))).toList)
   }
 }
 
