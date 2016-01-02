@@ -128,5 +128,8 @@ class Test extends FunSuite {
     println(new Test.ParsedEphemeral().get())
     assert(Test.runs == 1)
     println(w.dotFormatDiagram())
+    println(w.dotFormatActiveDiagram())
+    println(new Test.ParsedEphemeral().dotFormatDiagram())
+    println(new Test.ParsedEphemeral().dotFormatActiveDiagram())
   }
 }

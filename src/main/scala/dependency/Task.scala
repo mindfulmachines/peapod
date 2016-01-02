@@ -10,21 +10,21 @@ import scala.reflect.ClassTag
 abstract class Task [T: ClassTag](implicit p: Peapod) {
   lazy val name: String = this.getClass.getName
   protected val version: String = "1"
-  protected val pods= scala.collection.mutable.ArrayBuffer.empty[Task[_]]
+  protected val peas= scala.collection.mutable.ArrayBuffer.empty[Task[_]]
 
   protected lazy val dir = p.fs + p.path + "/" + name + "/" + recursiveVersionShort
 
   def get(): T = {
     //Adds all dependencies to workflow
-    pods.foreach(d => p.putActive(this, d))
+    peas.foreach(d => p.putActive(this, d))
     //Builds all dependencies
     if(! exists()) {
-      pods.foreach(d => p.build(d))
+      peas.foreach(d => p.build(d))
     }
     val f= p.build(this)
     val t= Await.result(f, Duration.Inf).asInstanceOf[T]
     //Removes dependencies from workflow cache is not needed, this allows them to be unpersisted automatically
-    pods.foreach(d => p.removeIfUnneeded(d.name))
+    peas.foreach(d => p.removeIfUnneeded(d.name))
     p.removeIfUnneeded(this.name)
     t
   }
@@ -32,13 +32,13 @@ abstract class Task [T: ClassTag](implicit p: Peapod) {
   protected[dependency] def build(): T
 
   protected def pea[D <: Task[_]](d: D): D = {
-    pods += d
+    peas += d
     p.put(this,d)
     d
   }
 
   def recursiveVersion: List[String] = {
-    name + ":" + version :: pods.flatMap(_.recursiveVersion.map("-" + _)).toList
+    name + ":" + version :: peas.flatMap(_.recursiveVersion.map("-" + _)).toList
   }
   def recursiveVersionShort: String = {
     val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
@@ -51,6 +51,12 @@ abstract class Task [T: ClassTag](implicit p: Peapod) {
     //essentially has one additional use that's not tracked as a dependency
     p.activeReversePeaLinks.getOrElse(name, Nil).size > 1 ||
       (p.activeReversePeaLinks.getOrElse(name, Nil).size == 1 && p.isEmpty)
+  }
+  def dotFormatDiagram(): String = {
+    DotFormatter.format(peas.map(d => (this.name,d.name)).toList)
+  }
+  def dotFormatActiveDiagram(): String = {
+    DotFormatter.format(peas.filter(! _.exists()).map(d => (this.name,d.name)).toList)
   }
 
 }
