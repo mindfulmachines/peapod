@@ -82,27 +82,6 @@ object StorableTask {
     def persistStorable() = s
   }
 
-  class WritableStorable[V <: Writable: ClassTag](s: V) extends Storable[V] {
-    def readStorable(p: Peapod, fs: String, path: String): V = {
-      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
-      val in = filesystem.open(new Path(fs + path + "/serialized.dat"))
-      val obj = classTag[V].runtimeClass.newInstance().asInstanceOf[V]
-      obj.readFields(in)
-      in.close()
-      filesystem.close()
-      obj
-    }
-    def writeStorable(p: Peapod, fs: String, path: String) = {
-      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
-      val out = filesystem.create(new Path(path + "/serialized.dat"))
-      s.write(out)
-      out.close()
-      filesystem.close()
-    }
-    def persistStorable() = s
-  }
-
-
   class WritableConvertedStorable[V : ClassTag, W <: Writable: ClassTag]
       (s: V, ctw: V => W, wtc: W => V) extends Storable[V] {
     def readStorable(p: Peapod, fs: String, path: String): V = {
@@ -132,7 +111,7 @@ object StorableTask {
   implicit def serializableToStorable[V <: Serializable: ClassTag](s: V): Storable[V] =
     new SerializableStorable[V](s)
   implicit def writableToStorable[V <: Writable: ClassTag](s: V): Storable[V] =
-    new WritableStorable[V](s)
+    new WritableConvertedStorable[V,V](s, v => v, w => w)
   implicit def doubleToStorable(s: Double): Storable[Double] =
     new WritableConvertedStorable[Double, DoubleWritable](s, new DoubleWritable(_), _.get())
 
