@@ -16,7 +16,7 @@ abstract class Task [T: ClassTag](implicit p: Peapod) {
 
   def get(): T = {
     //Adds all dependencies to workflow
-    pods.foreach(d => p.put(this, d))
+    pods.foreach(d => p.putActive(this, d))
     //Builds all dependencies
     if(! exists()) {
       pods.foreach(d => p.build(d))
@@ -33,6 +33,7 @@ abstract class Task [T: ClassTag](implicit p: Peapod) {
 
   protected def pea[D <: Task[_]](d: D): D = {
     pods += d
+    p.put(this,d)
     d
   }
 
@@ -48,8 +49,8 @@ abstract class Task [T: ClassTag](implicit p: Peapod) {
   protected def shouldPersist(): Boolean = {
     //If workflow cache is empty then this is probably the exit of the workflow so it
     //essentially has one additional use that's not tracked as a dependency
-    p.revDependencies.getOrElse(name, Nil).size > 1 ||
-      (p.revDependencies.getOrElse(name, Nil).size == 1 && p.isEmpty)
+    p.activeReversePeaLinks.getOrElse(name, Nil).size > 1 ||
+      (p.activeReversePeaLinks.getOrElse(name, Nil).size == 1 && p.isEmpty)
   }
 
 }
