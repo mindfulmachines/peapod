@@ -127,5 +127,6 @@ class Test extends FunSuite {
     Test.runs = 0
     println(new Test.ParsedEphemeral().get())
     assert(Test.runs == 1)
+    println(w.dotFormatDiagram())
   }
 }
