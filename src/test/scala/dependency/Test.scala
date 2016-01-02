@@ -84,7 +84,7 @@ object Test {
     }
   }
 
-  class AUC(implicit _p: Peapod) extends StorableTask[DoubleWritable] {
+  class AUC(implicit _p: Peapod) extends StorableTask[Double] {
     val pipelineLR = pea(new PipelineLR())
     val pipelineFeature = pea(new PipelineFeature())
     val parsed = pea(new Parsed)
@@ -94,7 +94,7 @@ object Test {
       val transformed = pipelineFeature.get().transform(training)
       val predictions = pipelineLR.get().transform(transformed)
       val evaluator = new BinaryClassificationEvaluator()
-      new DoubleWritable(evaluator.evaluate(predictions))
+      evaluator.evaluate(predictions)
     }
   }
 }
@@ -110,10 +110,10 @@ class Test extends FunSuite {
       fs="file://",
       path=path,
       raw="")
-    println(new Test.AUC().get().get())
+    println(new Test.AUC().get())
     assert(Test.runs == 5)
     Test.runs = 0
-    println(new Test.AUC().get().get())
+    println(new Test.AUC().get())
     assert(Test.runs == 0)
     Test.runs = 0
     println(new Test.Parsed().get())
