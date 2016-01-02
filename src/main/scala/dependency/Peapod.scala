@@ -15,8 +15,12 @@ class Peapod(val fs: String = "s3n://",
               val parallelism: Int = 100,
                 val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
   private val cache = new mutable.HashMap[String, Future[_]]
-  private val dependencies = new mutable.HashMap[String, TreeSet[String]]
-  val revDependencies = new mutable.HashMap[String, TreeSet[String]] with mutable.SynchronizedMap[String, TreeSet[String]]
+  private val activePeaLinks = new mutable.HashMap[String, TreeSet[String]]
+  val activeReversePeaLinks = new mutable.HashMap[String, TreeSet[String]] with mutable.SynchronizedMap[String, TreeSet[String]]
+
+  private val peaLinks = new mutable.HashMap[String, TreeSet[String]]
+  val reversePeaLinks = new mutable.HashMap[String, TreeSet[String]] with mutable.SynchronizedMap[String, TreeSet[String]]
+  
   private implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
   val sqlCtx =  new SQLContext(sc)
 
@@ -24,15 +28,21 @@ class Peapod(val fs: String = "s3n://",
     cache.isEmpty
   }
 
-  def put(d1: Task[_], d2: Task[_]): Unit = this.synchronized {
+  def putActive(d1: Task[_], d2: Task[_]): Unit = this.synchronized {
     if(! d1.exists()) {
-      dependencies.update(d1.name, dependencies.getOrElse(d1.name, TreeSet[String]())+ d2.name)
-      revDependencies.update(d2.name, revDependencies.getOrElse(d2.name, TreeSet[String]()) + d1.name )
+      activePeaLinks.update(d1.name, activePeaLinks.getOrElse(d1.name, TreeSet[String]())+ d2.name)
+      activeReversePeaLinks.update(d2.name, activeReversePeaLinks.getOrElse(d2.name, TreeSet[String]()) + d1.name )
     }
   }
+
+  def put(d1: Task[_], d2: Task[_]): Unit = this.synchronized {
+    peaLinks.update(d1.name, peaLinks.getOrElse(d1.name, TreeSet[String]())+ d2.name)
+    reversePeaLinks.update(d2.name, reversePeaLinks.getOrElse(d2.name, TreeSet[String]()) + d1.name )
+  }
+
   def removeIfUnneeded(name: String): Unit = this.synchronized {
     if(! persistentCache) {
-      revDependencies.get(name) match {
+      activeReversePeaLinks.get(name) match {
         case Some(l) =>
           if (l.forall(cache.get(_).forall(_.isCompleted))) {
             cache.remove(name)
@@ -51,10 +61,13 @@ class Peapod(val fs: String = "s3n://",
   }
   def dotFormatDiagram(): String = {
     "digraph G {" +
-    dependencies.map(
+    "node [shape=box];" +
+    peaLinks.map(
       kv => kv._2.map("\"" + _ + "\"->\"" + kv._1 + "\";").mkString("\n")
     )
     .mkString("\n") +
+    "{ rank=same;" + peaLinks.filter(kv => ! reversePeaLinks.contains(kv._1)).map("\"" + _._1 + "\"").mkString(" ") + "}" +
+    "{ rank=same;" + reversePeaLinks.filter(kv => ! peaLinks.contains(kv._1)).map("\"" + _._1 + "\"").mkString(" ") + "}" +
     "}"
   }
 }
