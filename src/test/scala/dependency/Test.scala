@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.google.common.io.Resources
+import org.apache.commons.codec.net.URLCodec
 import org.apache.hadoop.io.DoubleWritable
 import org.apache.spark.api.java.StorageLevels
 import org.apache.spark.ml.PipelineModel
@@ -119,6 +120,10 @@ class Test extends FunSuite {
       fs="file://",
       path=path,
       raw="")
+
+    new Test.AUC()
+    println("http://g.gravizo.com/g?" +
+      new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
     println(new Test.AUC().get())
     assert(Test.runs == 5)
     Test.runs = 0
@@ -127,9 +132,8 @@ class Test extends FunSuite {
     Test.runs = 0
     println(new Test.ParsedEphemeral().get())
     assert(Test.runs == 1)
-    println(w.dotFormatDiagram())
-    println(w.dotFormatActiveDiagram())
-    println(new Test.ParsedEphemeral().dotFormatDiagram())
-    println(new Test.ParsedEphemeral().dotFormatActiveDiagram())
+    println("http://g.gravizo.com/g?" +
+      new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
+
   }
 }

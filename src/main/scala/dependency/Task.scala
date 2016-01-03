@@ -52,12 +52,6 @@ abstract class Task [T: ClassTag](implicit p: Peapod) {
     p.activeReversePeaLinks.getOrElse(name, Nil).size > 1 ||
       (p.activeReversePeaLinks.getOrElse(name, Nil).size == 1 && p.isEmpty)
   }
-  def dotFormatDiagram(): String = {
-    DotFormatter.format(peas.map(d => (this.name,d.name)).toList)
-  }
-  def dotFormatActiveDiagram(): String = {
-    DotFormatter.format(peas.filter(! _.exists()).map(d => (this.name,d.name)).toList)
-  }
 
 }
 
