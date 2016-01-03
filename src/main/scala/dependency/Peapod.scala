@@ -15,6 +15,7 @@ class Peapod(val fs: String = "s3n://",
               val parallelism: Int = 100,
                 val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
   private val cache = new mutable.HashMap[String, Future[_]]
+  private val peas = new mutable.HashMap[String, Task[_]]
   private val activePeaLinks = new mutable.HashMap[String, TreeSet[String]]
   val activeReversePeaLinks = new mutable.HashMap[String, TreeSet[String]] with mutable.SynchronizedMap[String, TreeSet[String]]
 
@@ -36,6 +37,8 @@ class Peapod(val fs: String = "s3n://",
   }
 
   def put(d1: Task[_], d2: Task[_]): Unit = this.synchronized {
+    peas.getOrElseUpdate(d1.name,d1)
+    peas.getOrElseUpdate(d2.name,d2)
     peaLinks.update(d1.name, peaLinks.getOrElse(d1.name, TreeSet[String]())+ d2.name)
     reversePeaLinks.update(d2.name, reversePeaLinks.getOrElse(d2.name, TreeSet[String]()) + d1.name )
   }
@@ -60,10 +63,10 @@ class Peapod(val fs: String = "s3n://",
     f
   }
   def dotFormatDiagram(): String = {
-    DotFormatter.format(peaLinks.flatMap(d => d._2.map((d._1,_))).toList)
+    DotFormatter.format(peaLinks.flatMap(d => d._2.map(dd => (peas(d._1),peas(dd)))).toList)
   }
   def dotFormatActiveDiagram(): String = {
-    DotFormatter.format(activePeaLinks.flatMap(d => d._2.map((d._1,_))).toList)
+    DotFormatter.format(activePeaLinks.flatMap(d => d._2.map(dd => (peas(d._1),peas(dd)))).toList)
   }
 }
 
