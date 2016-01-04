@@ -20,6 +20,7 @@ If you're using maven then just add this or clone the repository (and then run m
 
 The first step is to create a Task. A StorableTask will automatically save and load the output of the Task's generate method (in this case a RDD[(Long,String)]) to disk. If an appropriate serialized version exists it will be loaded, otherwise it will be generated and then saved. We'll discuss where the storage happens a bit further down. StorableTask can only serialize, currently, RDDs, DataFrames and Serializable classes. You can override the read and write methods to save/laod other types of classes.
 ```scala
+import dependency.StorableTask._
 class RawPages(implicit _p: Peapod) extends StorableTask[RDD[(Long, String)]] {
   def generate =
     readWikiDump(p.sc, p.fs + p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
@@ -27,6 +28,7 @@ class RawPages(implicit _p: Peapod) extends StorableTask[RDD[(Long, String)]] {
 ```
 Then you can create other tasks which depend on this task. You use the pea() method to wrap a task to have it be a dependency of the current task. You can then use the get() method of the dependency to access the output of the dependencies generate method. The outputs are cached so even if you create multiple instances of a Task (within a single Peapod, we'll get to that in a bit) their get methods will all point to the same data.
 ```scala
+import dependency.StorableTask._
 class ParsedPages(implicit _p: Peapod) extends StorableTask[RDD[Page]] {
   val rawPages = pea(new RawPages())
   def generate =
@@ -49,6 +51,7 @@ new ParsedPages().get().count()
 ```
 Tasks support versioning and the versioning flows through the pipeline so all dependent Tasks are also re-generated if the version of their dependency changes. For the below would cause ParsedPages and RawPages to be re-run even if they had previously had their output stored.
 ```scala
+import dependency.StorableTask._
 class RawPages(implicit _p: Peapod) extends StorableTask[RDD[(Long, String)]] {
   override val version = "2"
   def generate =
@@ -64,6 +67,7 @@ In progress.
 ## Ephemeral Task
 This is a Task which never saves or loads it's state from disk but always runs the generate method. This is useful for quick Tasks or Tasks which only run for a short period of time.
 ```scala
+import dependency.StorableTask._
 class RawPages(implicit _p: Peapod) extends EphemeralTask[RDD[(Long, String)]] {
   def generate =
     readWikiDump(p.sc, p.fs + p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
