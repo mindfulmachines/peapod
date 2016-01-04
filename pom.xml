@@ -6,8 +6,53 @@
 
     <groupId>io.teachingmachines</groupId>
     <artifactId>peapod</artifactId>
+    <version>0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <version>0.1-SNAPSHOT</version>
+
+    <name>Peapod</name>
+    <description>Dependency and data pipeline management framework for Spark and Scala.</description>
+    <url>https://github.com/teachingmachines/peapod</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+
+    <developers>
+        <developer>
+            <name>Marcin Mejran</name>
+            <email>marcin@teachingmachines.io</email>
+            <organization>Teaching Machines</organization>
+            <organizationUrl>http://www.teachingmachines.io</organizationUrl>
+        </developer>
+        <developer>
+            <name>Zoe Afshar</name>
+            <email>zoe@teachingmachines.io</email>
+            <organization>Teaching Machines</organization>
+            <organizationUrl>http://www.teachingmachines.io</organizationUrl>
+        </developer>
+    </developers>
+
+
+    <scm>
+        <connection>scm:git:git@github.com:teachingmachines/peapod.git</connection>
+        <developerConnection>scm:git:git@github.com:teachingmachines/peapod.git</developerConnection>
+        <url>git@github.com:teachingmachines/peapod.git</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
@@ -176,6 +221,33 @@
                         <phase>compile</phase>
                         <goals>
                             <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
                         </goals>
                     </execution>
                 </executions>
