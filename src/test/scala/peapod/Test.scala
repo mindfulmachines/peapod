@@ -1,4 +1,4 @@
-package dependency
+package peapod
 
 import java.io.File
 import java.text.SimpleDateFormat
@@ -121,7 +121,10 @@ class Test extends FunSuite {
       path=path,
       raw="")
 
+    new Test.PipelineFeature().get()
+    new Test.ParsedEphemeral()
     new Test.AUC()
+    println(w.dotFormatDiagram())
     println("http://g.gravizo.com/g?" +
       new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
     println(new Test.AUC().get())

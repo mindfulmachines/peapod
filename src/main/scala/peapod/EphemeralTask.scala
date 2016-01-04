@@ -1,4 +1,4 @@
-package dependency
+package peapod
 
 import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
@@ -12,7 +12,7 @@ abstract class EphemeralTask[V: ClassTag](implicit val p: Peapod)
 
   protected def generate: V
 
-  protected[dependency] def  build(): V = {
+  protected[peapod] def  build(): V = {
     logInfo("Loading" + dir)
     val generated = generate
     if(shouldPersist()) {

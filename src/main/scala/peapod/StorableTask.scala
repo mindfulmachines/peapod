@@ -1,4 +1,4 @@
-package dependency
+package peapod
 
 import java.io.{ObjectInputStream, ObjectOutputStream, ByteArrayOutputStream}
 import java.net.URI
@@ -120,7 +120,7 @@ abstract class StorableTaskBase[V : ClassTag](implicit val p: Peapod)
   extends Task[V] with Logging  {
   protected def generate: V
 
-  protected[dependency] def build(): V = {
+  protected[peapod] def build(): V = {
     logInfo("Loading" + dir)
     logInfo("Loading" + dir + " Exists: " + exists)
     val generated = if(! exists()) {

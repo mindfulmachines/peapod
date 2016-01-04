@@ -1,4 +1,4 @@
-package dependency
+package peapod
 
 import org.apache.commons.codec.binary.Base64
 import org.apache.hadoop.io.MD5Hash
@@ -29,7 +29,7 @@ abstract class Task [T: ClassTag](implicit p: Peapod) {
     t
   }
 
-  protected[dependency] def build(): T
+  protected[peapod] def build(): T
 
   protected def pea[D <: Task[_]](d: D): D = {
     peas += d
