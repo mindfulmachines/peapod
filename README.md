@@ -14,6 +14,13 @@ If you're using maven then just add this or clone the repository (and then run m
     <artifactId>peapod</artifactId>
     <version>0.3-SNAPSHOT</version>
 </dependency>
+
+<repositories>
+  <repository>
+    <id>sonatype-snapshots</id>
+    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+  </repository>
+</repositories>
 ```
 
 # Using
