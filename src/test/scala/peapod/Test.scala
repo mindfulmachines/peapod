@@ -6,8 +6,6 @@ import java.util.Date
 
 import com.google.common.io.Resources
 import org.apache.commons.codec.net.URLCodec
-import org.apache.hadoop.io.DoubleWritable
-import org.apache.spark.api.java.StorageLevels
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator

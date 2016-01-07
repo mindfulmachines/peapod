@@ -67,7 +67,7 @@ object StorableTask {
     }
     def writeStorable(p: Peapod, fs: String, path: String) = {
       val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
-      val out = filesystem.create(new Path(path + "/serialized.dat"))
+      val out = filesystem.create(new Path(fs + path + "/serialized.dat"))
       val objWriter = new ObjectOutputStream(out)
       objWriter.writeObject(s)
       objWriter.close()
@@ -88,7 +88,7 @@ object StorableTask {
     }
     def writeStorable(p: Peapod, fs: String, path: String) = {
       val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
-      val out = filesystem.create(new Path(path + "/serialized.dat"))
+      val out = filesystem.create(new Path(fs + path + "/serialized.dat"))
       ctw(s).write(out)
       out.close()
       filesystem.close()
