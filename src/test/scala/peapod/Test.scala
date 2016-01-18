@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.google.common.io.Resources
+import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.net.URLCodec
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.classification.LogisticRegression
@@ -123,8 +124,9 @@ class Test extends FunSuite {
     new Test.ParsedEphemeral()
     new Test.AUC()
     println(w.dotFormatDiagram())
-    println("http://g.gravizo.com/g?" +
-      new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
+    println(Util.gravizoDotLink(w.dotFormatDiagram()))
+    println(Util.teachingmachinesDotLink(w.dotFormatDiagram()))
+    System.exit(1)
     println(new Test.AUC().get())
     assert(Test.runs == 5)
     Test.runs = 0
@@ -135,6 +137,8 @@ class Test extends FunSuite {
     assert(Test.runs == 1)
     println("http://g.gravizo.com/g?" +
       new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
+
+
 
   }
 }
