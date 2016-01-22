@@ -7,7 +7,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-abstract class Task [T: ClassTag](implicit p: Peapod) {
+abstract class Task [+T: ClassTag](implicit p: Peapod) {
   lazy val name: String = this.getClass.getName
   protected val version: String = "1"
   protected val peas= scala.collection.mutable.ArrayBuffer.empty[Task[_]]
