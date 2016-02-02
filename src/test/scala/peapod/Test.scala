@@ -40,7 +40,7 @@ object Test {
     val raw = pea(new Raw)
     def generate = {
       upRuns()
-      raw.get().df
+      raw.get().toDF()
     }
   }
 
@@ -49,7 +49,7 @@ object Test {
     val raw = pea(new Raw)
     def generate = {
       upRuns()
-      raw.get().df
+      raw.get().toDF()
     }
   }
 

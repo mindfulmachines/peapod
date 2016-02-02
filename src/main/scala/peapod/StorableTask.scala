@@ -8,11 +8,12 @@ import org.apache.hadoop.io.compress.BZip2Codec
 import org.apache.hadoop.io._
 import org.apache.spark.{SparkContext, Logging}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Dataset, DataFrame}
 import org.apache.spark.storage.StorageLevel
 import scala.reflect._
 
 import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
 
 object StorableTask {
 
@@ -43,6 +44,23 @@ object StorableTask {
     }
     def writeStorable(p: Peapod, fs: String, path: String) = {
       df.write.parquet(fs + path)
+    }
+  }
+
+  class DataSetStorable[W <: Product : TypeTag](ds: Dataset[W]) extends Storable[Dataset[W]] {
+    def readStorable(p: Peapod, fs: String, path: String): Dataset[W] = {
+      import p.sqlCtx.implicits._
+      if(fs.startsWith("s3n")) {
+        //There's a bug in the parquet reader for S3 so it doesn't properly get the hadoop configuration key and secret
+        val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
+        val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
+        p.sqlCtx.read.parquet(fs + awsKey + ":" + awsSecret + "@" + path).as[W]
+      } else {
+        p.sqlCtx.read.parquet(fs + path).as[W]
+      }
+    }
+    def writeStorable(p: Peapod, fs: String, path: String) = {
+      ds.toDF().write.parquet(fs + path)
     }
   }
 
@@ -98,6 +116,8 @@ object StorableTask {
 
   implicit def dfToStorable(df: DataFrame): Storable[DataFrame] =
     new DataFrameStorable(df)
+  implicit def dsToStorable[W <: Product : TypeTag, V <: Dataset[W]](ds: V): Storable[Dataset[W]] =
+    new DataSetStorable[W](ds)
   implicit def rddToStorable[W: ClassTag, V <: RDD[W]](rdd: V): Storable[RDD[W]] =
     new RDDStorable[W](rdd)
   implicit def serializableToStorable[V <: Serializable: ClassTag](s: V): Storable[V] =
