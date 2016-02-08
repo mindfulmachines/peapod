@@ -63,10 +63,22 @@ class Peapod(val fs: String = "s3n://",
     f
   }
   def dotFormatDiagram(): String = {
-    DotFormatter.format(peaLinks.flatMap(d => d._2.map(dd => (peas(d._1),peas(dd)))).toList)
+    DotFormatter.format(
+      peaLinks.toList.flatMap(
+        d => d._2.map(
+          dd => (peas(d._1),peas(dd))
+        )
+      )
+    )
   }
   def dotFormatActiveDiagram(): String = {
-    DotFormatter.format(activePeaLinks.flatMap(d => d._2.map(dd => (peas(d._1),peas(dd)))).toList)
+    DotFormatter.format(
+      activePeaLinks.toList.flatMap(
+        d => d._2.map(
+          dd => (peas(d._1),peas(dd))
+        )
+      )
+    )
   }
 }
 
