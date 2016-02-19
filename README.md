@@ -12,15 +12,8 @@ If you're using maven then just add this or clone the repository (and then run m
 <dependency>
     <groupId>io.teachingmachines</groupId>
     <artifactId>peapod</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4</version>
 </dependency>
-
-<repositories>
-  <repository>
-    <id>sonatype-snapshots</id>
-    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-  </repository>
-</repositories>
 ```
 
 # Using
