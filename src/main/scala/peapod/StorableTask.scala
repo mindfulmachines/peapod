@@ -182,7 +182,8 @@ abstract class StorableTaskBase[V : ClassTag](implicit val p: Peapod)
   }
   def exists(): Boolean = {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
-    fs.isFile(new Path(dir + "/_SUCCESS"))
+    val path = new Path(dir + "/_SUCCESS")
+    fs.exists(path) && fs.isFile(path)
   }
 }
 
