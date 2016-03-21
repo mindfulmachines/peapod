@@ -57,6 +57,9 @@ abstract class Task [+T: ClassTag](implicit p: Peapod) {
 
 
 
-
+object Task {
+  implicit def getAnyTask[T](task: Task[T]): T =
+    task.get()
+}
 
 

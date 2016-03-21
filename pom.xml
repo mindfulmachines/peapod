@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.teachingmachines</groupId>
-    <artifactId>peapod</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <artifactId>peapod_2.11</artifactId>
+    <version>0.5</version>
     <packaging>jar</packaging>
 
     <name>Peapod</name>
@@ -45,12 +45,12 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>${distribution.id}</id>
+            <url>${distribution.snapshots}</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>${distribution.id}</id>
+            <url>${distribution.releases}/</url>
         </repository>
     </distributionManagement>
 
@@ -58,20 +58,20 @@
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>2.10.4</version>
+            <version>2.11.7</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.10</artifactId>
+            <artifactId>scalatest_2.11</artifactId>
             <version>2.2.4</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.10</artifactId>
-            <version>1.6.0</version>
+            <artifactId>spark-core_2.11</artifactId>
+            <version>1.6.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>
@@ -82,22 +82,22 @@
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.10</artifactId>
-            <version>1.6.0</version>
+            <artifactId>spark-sql_2.11</artifactId>
+            <version>1.6.1</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-mllib_2.10</artifactId>
-            <version>1.6.0</version>
+            <artifactId>spark-mllib_2.11</artifactId>
+            <version>1.6.1</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
-            <version>2.4.0</version>
+            <version>2.7.2</version>
             <scope>provided</scope>
         </dependency>
 
@@ -129,7 +129,7 @@
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
-                    <version>3.1.6</version>
+                    <version>3.2.2</version>
                 </plugin>
 
                 <plugin>
@@ -184,7 +184,7 @@
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>3.1.6</version>
+                <version>3.2.2</version>
                 <configuration>
                     <recompileMode>incremental</recompileMode>
                     <source>1.8</source>
