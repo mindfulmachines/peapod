@@ -29,6 +29,13 @@ class Peapod(val fs: String = "s3n://",
     cache.isEmpty
   }
 
+  def clear() = this.synchronized {
+    cache.clear()
+    peas.clear()
+    activePeaLinks.clear()
+    activeReversePeaLinks.clear()
+  }
+
   def putActive(d1: Task[_], d2: Task[_]): Unit = this.synchronized {
     if(! d1.exists()) {
       activePeaLinks.update(d1.name, activePeaLinks.getOrElse(d1.name, TreeSet[String]())+ d2.name)
