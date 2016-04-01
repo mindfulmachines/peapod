@@ -62,6 +62,17 @@ class Peapod(val fs: String = "s3n://",
     )
     f
   }
+
+  def clear() = this.synchronized{
+    cache.clear()
+    peas.clear()
+    peaLinks.clear()
+    reversePeaLinks.clear()
+    activePeaLinks.clear()
+    activeReversePeaLinks.clear()
+  }
+
+
   def dotFormatDiagram(): String = {
     DotFormatter.format(
       peaLinks.toList.flatMap(
@@ -80,5 +91,7 @@ class Peapod(val fs: String = "s3n://",
       )
     )
   }
+
+
 }
 
