@@ -34,6 +34,8 @@ class Peapod(val fs: String = "s3n://",
     peas.clear()
     activePeaLinks.clear()
     activeReversePeaLinks.clear()
+    peaLinks.clear()
+    reversePeaLinks.clear()
   }
 
   def putActive(d1: Task[_], d2: Task[_]): Unit = this.synchronized {
