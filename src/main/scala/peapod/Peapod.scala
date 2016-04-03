@@ -9,11 +9,9 @@ import scala.collection.mutable
 import scala.collection.immutable.TreeSet
 import scala.concurrent.{ExecutionContext, Future}
 
-class Peapod(val fs: String = "s3n://",
-              val path: String,
+class Peapod(private[peapod] val path: String,
               val raw: String,
-              val parallelism: Int = 100,
-                val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
+             private val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
   private val cache = new mutable.HashMap[String, Future[_]]
   private val peas = new mutable.HashMap[String, Task[_]]
   private val activePeaLinks = new mutable.HashMap[String, TreeSet[String]]
@@ -28,16 +26,6 @@ class Peapod(val fs: String = "s3n://",
   def isEmpty(): Boolean = {
     cache.isEmpty
   }
-
-  def clear() = this.synchronized {
-    cache.clear()
-    peas.clear()
-    activePeaLinks.clear()
-    activeReversePeaLinks.clear()
-    peaLinks.clear()
-    reversePeaLinks.clear()
-  }
-
   def putActive(d1: Task[_], d2: Task[_]): Unit = this.synchronized {
     if(! d1.exists()) {
       activePeaLinks.update(d1.name, activePeaLinks.getOrElse(d1.name, TreeSet[String]())+ d2.name)

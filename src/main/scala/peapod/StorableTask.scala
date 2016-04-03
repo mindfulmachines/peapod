@@ -32,60 +32,62 @@ object StorableTask {
   }
 
   class DataFrameStorable(df: DataFrame) extends Storable[DataFrame] {
-    def readStorable(p: Peapod, fs: String, path: String): DataFrame = {
-      if(fs.startsWith("s3n")) {
+    def readStorable(p: Peapod, dir: String): DataFrame = {
+      if(dir.startsWith("s3n")) {
         //There's a bug in the parquet reader for S3 so it doesn't properly get the hadoop configuration key and secret
+        val uri = new URI(dir)
         val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
         val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
-          p.sqlCtx.read.parquet(fs + awsKey + ":" + awsSecret + "@" + path)
+          p.sqlCtx.read.parquet(uri.getScheme + "//" + awsKey + ":" + awsSecret + "@" + uri.getPath)
       } else {
-          p.sqlCtx.read.parquet(fs + path)
+          p.sqlCtx.read.parquet(dir)
       }
     }
-    def writeStorable(p: Peapod, fs: String, path: String) = {
-      df.write.parquet(fs + path)
+    def writeStorable(p: Peapod, dir: String) = {
+      df.write.parquet(dir)
     }
   }
 
   class DataSetStorable[W <: Product : TypeTag](ds: Dataset[W]) extends Storable[Dataset[W]] {
-    def readStorable(p: Peapod, fs: String, path: String): Dataset[W] = {
+    def readStorable(p: Peapod, dir: String): Dataset[W] = {
       import p.sqlCtx.implicits._
-      if(fs.startsWith("s3n")) {
+      if(dir.startsWith("s3n")) {
         //There's a bug in the parquet reader for S3 so it doesn't properly get the hadoop configuration key and secret
+        val uri = new URI(dir)
         val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
         val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
-        p.sqlCtx.read.parquet(fs + awsKey + ":" + awsSecret + "@" + path).as[W]
+        p.sqlCtx.read.parquet(uri.getScheme + "//" +  awsKey + ":" + awsSecret + "@" + uri.getPath).as[W]
       } else {
-        p.sqlCtx.read.parquet(fs + path).as[W]
+        p.sqlCtx.read.parquet(dir).as[W]
       }
     }
-    def writeStorable(p: Peapod, fs: String, path: String) = {
-      ds.toDF().write.parquet(fs + path)
+    def writeStorable(p: Peapod, dir: String) = {
+      ds.toDF().write.parquet(dir)
     }
   }
 
   class RDDStorable[W: ClassTag](rdd: RDD[W]) extends Storable[RDD[W]] {
-    def readStorable(p: Peapod, fs: String, path: String): RDD[W] = {
-      p.sc.objectFile[W](fs + path)
+    def readStorable(p: Peapod, dir: String): RDD[W] = {
+      p.sc.objectFile[W](dir)
     }
-    def writeStorable(p: Peapod, fs: String, path: String) = {
-      StorableTask.saveAsCompressedObjectFile(rdd, fs + path)
+    def writeStorable(p: Peapod, dir: String) = {
+      StorableTask.saveAsCompressedObjectFile(rdd, dir)
     }
   }
 
   class SerializableStorable[V <: Serializable: ClassTag](s: V) extends Storable[V] {
-    def readStorable(p: Peapod, fs: String, path: String): V = {
-      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
-      val in = filesystem.open(new Path(fs + path + "/serialized.dat"))
+    def readStorable(p: Peapod, dir: String): V = {
+      val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
+      val in = filesystem.open(new Path(dir+ "/serialized.dat"))
       val objReader = new ObjectInputStream(in)
       val obj = objReader.readObject().asInstanceOf[V]
       in.close()
       filesystem.close()
       obj
     }
-    def writeStorable(p: Peapod, fs: String, path: String) = {
-      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
-      val out = filesystem.create(new Path(fs + path + "/serialized.dat"))
+    def writeStorable(p: Peapod, dir: String) = {
+      val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
+      val out = filesystem.create(new Path(dir + "/serialized.dat"))
       val objWriter = new ObjectOutputStream(out)
       objWriter.writeObject(s)
       objWriter.close()
@@ -95,18 +97,18 @@ object StorableTask {
 
   class WritableConvertedStorable[V : ClassTag, W <: Writable: ClassTag]
       (s: V, ctw: V => W, wtc: W => V) extends Storable[V] {
-    def readStorable(p: Peapod, fs: String, path: String): V = {
-      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
-      val in = filesystem.open(new Path(fs + path + "/serialized.dat"))
+    def readStorable(p: Peapod, dir: String): V = {
+      val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
+      val in = filesystem.open(new Path(dir + "/serialized.dat"))
       val obj = classTag[W].runtimeClass.newInstance().asInstanceOf[W]
       obj.readFields(in)
       in.close()
       filesystem.close()
       wtc(obj)
     }
-    def writeStorable(p: Peapod, fs: String, path: String) = {
-      val filesystem = FileSystem.get(new URI(fs + path), p.sc.hadoopConfiguration)
-      val out = filesystem.create(new Path(fs + path + "/serialized.dat"))
+    def writeStorable(p: Peapod, dir: String) = {
+      val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
+      val out = filesystem.create(new Path(dir + "/serialized.dat"))
       ctw(s).write(out)
       out.close()
       filesystem.close()
@@ -131,12 +133,12 @@ object StorableTask {
 
 
 trait Storable[V] {
-  def readStorable(p: Peapod, fs: String, path: String): V
-  def writeStorable(p: Peapod, fs: String, path: String)
+  def readStorable(p: Peapod, dir: String): V
+  def writeStorable(p: Peapod, dir: String)
 }
 
 
-abstract class StorableTaskBase[V : ClassTag](implicit val p: Peapod)
+abstract class StorableTaskBase[V : ClassTag](implicit p: Peapod)
   extends Task[V] with Logging  {
   protected def generate: V
 
@@ -192,10 +194,10 @@ abstract class StorableTask[V : ClassTag](implicit p: Peapod, c: V => Storable[V
 
   protected def read(): V = {
     c(null.asInstanceOf[V])
-      .readStorable(p,p.fs,p.path + "/" + name + "/" + recursiveVersionShort)
+      .readStorable(p,dir)
   }
   protected def write(v: V): Unit = {
-    v.writeStorable(p,p.fs,p.path + "/" + name + "/" + recursiveVersionShort)
+    v.writeStorable(p,dir)
   }
 
 }

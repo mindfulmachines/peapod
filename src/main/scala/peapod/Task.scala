@@ -7,12 +7,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-abstract class Task [+T: ClassTag](implicit p: Peapod) {
-  lazy val name: String = this.getClass.getName
-  protected val version: String = "1"
+abstract class Task [+T: ClassTag](implicit p: Peapod) extends BaseTask {
   protected val peas= scala.collection.mutable.ArrayBuffer.empty[Task[_]]
-
-  protected lazy val dir = p.fs + p.path + "/" + name + "/" + recursiveVersionShort
 
   def get(): T = {
     //Adds all dependencies to workflow
@@ -36,16 +32,10 @@ abstract class Task [+T: ClassTag](implicit p: Peapod) {
     p.put(this,d)
     d
   }
-
   def recursiveVersion: List[String] = {
-    name + ":" + version :: peas.flatMap(_.recursiveVersion.map("-" + _)).toList
+    versionName + ":" + version :: peas.flatMap(_.recursiveVersion.map("-" + _)).toList
   }
-  def recursiveVersionShort: String = {
-    val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
-    val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
-    new String(encodedBytes)
-  }
-  def exists(): Boolean
+
   protected def shouldPersist(): Boolean = {
     //If workflow cache is empty then this is probably the exit of the workflow so it
     //essentially has one additional use that's not tracked as a dependency
