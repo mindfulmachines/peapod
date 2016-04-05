@@ -31,14 +31,14 @@ object StorableTask {
       .saveAsSequenceFile(path, Some(classOf[BZip2Codec]))
   }
 
-  class DataFrameStorable(df: DataFrame) extends Storable[DataFrame] {
+  class DataFrameStorable(df: DataFrame) extends Storable[DataFrame] with Logging {
     def readStorable(p: Peapod, dir: String): DataFrame = {
       if(dir.startsWith("s3n")) {
         //There's a bug in the parquet reader for S3 so it doesn't properly get the hadoop configuration key and secret
         val uri = new URI(dir)
         val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
         val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
-          p.sqlCtx.read.parquet(uri.getScheme + "//" + awsKey + ":" + awsSecret + "@" + uri.getPath)
+        p.sqlCtx.read.parquet(uri.getScheme + "://" +  awsKey + ":" + awsSecret + "@" + uri.getHost + uri.getPath)
       } else {
           p.sqlCtx.read.parquet(dir)
       }
@@ -56,7 +56,7 @@ object StorableTask {
         val uri = new URI(dir)
         val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
         val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
-        p.sqlCtx.read.parquet(uri.getScheme + "//" +  awsKey + ":" + awsSecret + "@" + uri.getPath).as[W]
+        p.sqlCtx.read.parquet(uri.getScheme + "://" +  awsKey + ":" + awsSecret + "@" + uri.getHost + uri.getPath).as[W]
       } else {
         p.sqlCtx.read.parquet(dir).as[W]
       }
@@ -185,7 +185,11 @@ abstract class StorableTaskBase[V : ClassTag](implicit p: Peapod)
   def exists(): Boolean = {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     val path = new Path(dir + "/_SUCCESS")
-    fs.exists(path) && fs.isFile(path)
+    val path2 = new Path(dir + "/_metadata")
+    val path3 = new Path(dir + "/_common_metadata")
+    fs.exists(path) && fs.isFile(path) &&
+      fs.exists(path2) && fs.isFile(path2)  &&
+      fs.exists(path3) && fs.isFile(path3)
   }
 }
 
