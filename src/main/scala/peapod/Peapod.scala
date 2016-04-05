@@ -10,11 +10,9 @@ import scala.collection.immutable.TreeSet
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
-class Peapod(val fs: String = "s3n://",
-              val path: String,
+class Peapod(private[peapod] val path: String,
               val raw: String,
-              val parallelism: Int = 100,
-                val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
+             private val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
   private val peas = new mutable.WeakHashMap[String, Pea[_]]
 
 

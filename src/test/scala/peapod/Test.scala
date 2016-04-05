@@ -13,6 +13,7 @@ import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{HashingTF, StopWordsRemover, Tokenizer}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
+import org.joda.time.LocalDate
 import org.scalatest.FunSuite
 import StorableTask._
 
@@ -106,6 +107,21 @@ object Test {
       evaluator.evaluate(predictions)
     }
   }
+
+  class AUCPartitioned(val partition: LocalDate)(implicit _p: Peapod)
+    extends StorableTask[Double] with PartitionedTask {
+    val pipelineLR = pea(new PipelineLR())
+    val pipelineFeature = pea(new PipelineFeature())
+    val parsed = pea(new Parsed)
+    def generate = {
+      upRuns()
+      val training = parsed.get()
+      val transformed = pipelineFeature.get().transform(training)
+      val predictions = pipelineLR.get().transform(transformed)
+      val evaluator = new BinaryClassificationEvaluator()
+      evaluator.evaluate(predictions)
+    }
+  }
 }
 
 class Test extends FunSuite {
@@ -116,8 +132,7 @@ class Test extends FunSuite {
     new File(path).mkdir()
     new File(path).deleteOnExit()
     implicit val w = new Peapod(
-      fs="file://",
-      path=path,
+      path="file://" + path,
       raw="")
 
     w.pea(new Test.PipelineFeature()).get()
@@ -140,5 +155,6 @@ class Test extends FunSuite {
 
 
 
+    println(w.pea(new Test.AUCPartitioned(new LocalDate)).get())
   }
 }

@@ -6,7 +6,7 @@
 
     <groupId>io.teachingmachines</groupId>
     <artifactId>peapod_2.11</artifactId>
-    <version>0.6-SNAPSHOT</version>
+    <version>0.6-Partitioned-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Peapod</name>
@@ -106,6 +106,12 @@
             <artifactId>jets3t</artifactId>
             <version>0.9.4</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.nscala-time</groupId>
+            <artifactId>nscala-time_2.11</artifactId>
+            <version>2.12.0</version>
         </dependency>
 
     </dependencies>

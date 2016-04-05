@@ -7,7 +7,7 @@ import org.apache.spark.storage.StorageLevel
 
 import scala.reflect.ClassTag
 
-abstract class EphemeralTask[V: ClassTag](implicit val p: Peapod)
+abstract class EphemeralTask[V: ClassTag](implicit p: Peapod)
   extends Task[V] with Logging {
 
   protected def generate: V

@@ -1,5 +1,8 @@
 package peapod
 
+/**
+  *
+  */
 object DotFormatter {
   def format(links: List[(Pea[_], Pea[_])]): String = {
     val leftNodes = links.map(_._1).toSet
