@@ -14,17 +14,7 @@ abstract class EphemeralTask[V: ClassTag](implicit val p: Peapod)
 
   protected[peapod] def  build(): V = {
     logInfo("Loading" + dir)
-    val generated = generate
-    if(shouldPersist()) {
-      logInfo("Loading" + dir + " Persisting")
-      generated match {
-        case g: RDD[_] => g.persist(StorageLevel.MEMORY_AND_DISK).asInstanceOf[V]
-        case g: DataFrame => g.cache().asInstanceOf[V]
-        case _ => generated
-      }
-    } else {
-      generated
-    }
+    generate
   }
   def exists(): Boolean = false
 }

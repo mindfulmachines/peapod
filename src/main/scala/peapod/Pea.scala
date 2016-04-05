@@ -1,12 +1,15 @@
 package peapod
 
+import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 
+import org.apache.commons.codec.binary.Base64
+import org.apache.hadoop.io.MD5Hash
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, DataFrame}
 import org.apache.spark.storage.StorageLevel
 
-import scala.collection.immutable.TreeSet
+import scala.collection.immutable.{HashSet, TreeSet}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Await, Future}
 import scala.reflect.ClassTag
@@ -14,45 +17,90 @@ import scala.reflect.ClassTag
 /**
   * Created by marcin.mejran on 3/28/16.
   */
-class Pea[D: ClassTag, T <: Task[D]: ClassTag](task: T) {
-  override val toString= task.name
-  override val hashCode = task.hashCode
-  val ephemeral = task.isInstanceOf[EphemeralTask[_]]
-  val exists = task.exists()
-
+class Pea[+D: ClassTag](task: Task[D]) {
   private implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
 
-  var children: Set[Pea[_,_]] = new TreeSet[Pea[_, _]]()
-  var parents: Set[Pea[_,_]] = new TreeSet[Pea[_, _]]()
-  var cache: Future[D] = Future(task.get())
-  var root = false
+  override val toString = task.name
+  override val hashCode = task.name.hashCode
+  val version = task.version
 
-  def addParent(pea: Pea[_,_]) = this.synchronized {
+  val ephemeral = task.isInstanceOf[EphemeralTask[_]]
+  lazy val exists = task.exists()
+
+  var children: Set[Pea[_]] = new HashSet[Pea[_]]()
+  var parents: Set[Pea[_]] = new HashSet[Pea[_]]()
+  var cache: WeakReference[_] = new WeakReference[D](null.asInstanceOf[D])
+
+  def addParent(pea: Pea[_]) = this.synchronized {
     parents = parents + pea
   }
-  def removeParent(pea: Pea[_,_]) = this.synchronized {
+
+  def removeParent(pea: Pea[_]) = this.synchronized {
     parents = parents - pea
   }
 
-  def setAsRoot() = this.synchronized {
-    root = true
-  }
-  def addChild(pea: Pea[_,_]) = this.synchronized {
+  def addChild(pea: Pea[_]) = this.synchronized {
     children = children + pea
   }
-  def removeChild(pea: Pea[_,_]) = this.synchronized {
+
+  def removeChild(pea: Pea[_]) = this.synchronized {
     children = children - pea
   }
+
   def get(): D = this.synchronized {
-    val data = Await.result(cache, Duration.Inf)
+    if (cache.get() == null) {
+      //For efficiency generate all children get, stored in a list to prevent weak reference loss
+      val childGets = if (!exists) {
+        children.par.foreach(c => c.get())
+      } else {
+        Nil
+      }
+      val f = Future {
+        val built = task.build()
+        if (parents.size > 1) {
+          persist(built)
+        } else {
+          built
+        }
+      }
+      val d = Await.result(f, Duration.Inf)
+      cache = new WeakReference[D](d)
+    }
+    cache.get().asInstanceOf[D]
+  }
+
+  private def persist[V: ClassTag](d: V): V = {
     (
-      data match {
+      d match {
         case d: RDD[_] => d.persist(StorageLevel.MEMORY_AND_DISK)
         case d: DataFrame => d.cache()
-        case d: Dataset => d.cache()
-        case _ => _
+        case d: Dataset[_] => d.cache()
+        case d: V => d
       }
-      ).asInstanceOf[D]
+      ).asInstanceOf[V]
+  }
+
+  //TODO: Add unpersist logic to PeaPod
+  /*private def unpersist[V: ClassTag](d: V): V = {
+    (
+      d match {
+        case d: RDD[_] => d.unpersist()
+        case d: DataFrame => d.unpersist()
+        case d: Dataset[_] => d.unpersist()
+        case d: V => d
+      }
+      ).asInstanceOf[V]
+  }*/
+
+  //TODO: Cache recursive version so dependencies can be removed if not needed
+  def recursiveVersion: List[String] = {
+    toString + ":" + version :: children.flatMap(_.recursiveVersion.map("-" + _)).toList
+  }
+
+  def recursiveVersionShort: String = {
+    val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
+    val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
+    new String(encodedBytes)
   }
 
   /*
@@ -61,8 +109,13 @@ class Pea[D: ClassTag, T <: Task[D]: ClassTag](task: T) {
    */
   override def equals(o: Any) = {
     o match {
-      case pea: Pea[_,_] => pea.toString == this.toString
+      case pea: Pea[_] => pea.toString == this.toString
       case _ => false
     }
   }
+}
+
+object Pea {
+  implicit def getAnyTask[T](pea: Pea[T]): T =
+    pea.get()
 }

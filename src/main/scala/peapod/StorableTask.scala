@@ -34,7 +34,7 @@ object StorableTask {
   class DataFrameStorable(df: DataFrame) extends Storable[DataFrame] {
     def readStorable(p: Peapod, fs: String, path: String): DataFrame = {
       if(fs.startsWith("s3n")) {
-        //There's a bug in the parquet reader for S3 so it doesn't properly get the hadoop configuration key and secret
+        //There's a bug in the parquet reader for S3N so it doesn't properly get the hadoop configuration key and secret
         val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
         val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
           p.sqlCtx.read.parquet(fs + awsKey + ":" + awsSecret + "@" + path)
@@ -51,7 +51,7 @@ object StorableTask {
     def readStorable(p: Peapod, fs: String, path: String): Dataset[W] = {
       import p.sqlCtx.implicits._
       if(fs.startsWith("s3n")) {
-        //There's a bug in the parquet reader for S3 so it doesn't properly get the hadoop configuration key and secret
+        //There's a bug in the parquet reader for S3N so it doesn't properly get the hadoop configuration key and secret
         val awsKey = p.sc.hadoopConfiguration.get("fs.s3n.awsAccessKeyId")
         val awsSecret = p.sc.hadoopConfiguration.get("fs.s3n.awsSecretAccessKey")
         p.sqlCtx.read.parquet(fs + awsKey + ":" + awsSecret + "@" + path).as[W]
@@ -155,22 +155,11 @@ abstract class StorableTaskBase[V : ClassTag](implicit val p: Peapod)
       logInfo("Loading" + dir + " Reading")
       read()
     }
-    if(shouldPersist()) {
-      logInfo("Loading" + dir + " Persisting")
-      persist(generated)
-    } else {
-      generated
-    }
+    generated
   }
   protected def read(): V
   protected def write(v: V): Unit
-  def persist(generated: V): V = {
-    generated match {
-      case g: RDD[_] => g.persist(StorageLevel.MEMORY_AND_DISK).asInstanceOf[V]
-      case g: DataFrame => g.cache().asInstanceOf[V]
-      case _ => generated
-    }
-  }
+
   private def writeSuccess(): Unit = {
     val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     filesystem.createNewFile(new Path(dir + "/_SUCCESS"))
@@ -192,10 +181,10 @@ abstract class StorableTask[V : ClassTag](implicit p: Peapod, c: V => Storable[V
 
   protected def read(): V = {
     c(null.asInstanceOf[V])
-      .readStorable(p,p.fs,p.path + "/" + name + "/" + recursiveVersionShort)
+      .readStorable(p,p.fs,p.path + "/" + name + "/" + pea.recursiveVersionShort)
   }
   protected def write(v: V): Unit = {
-    v.writeStorable(p,p.fs,p.path + "/" + name + "/" + recursiveVersionShort)
+    v.writeStorable(p,p.fs,p.path + "/" + name + "/" + pea.recursiveVersionShort)
   }
 
 }

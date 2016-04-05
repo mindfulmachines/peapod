@@ -120,20 +120,20 @@ class Test extends FunSuite {
       path=path,
       raw="")
 
-    new Test.PipelineFeature().get()
-    new Test.ParsedEphemeral()
-    new Test.AUC()
+    w.pea(new Test.PipelineFeature()).get()
+    w.pea(new Test.ParsedEphemeral())
+    w.pea(new Test.AUC())
     println(w.dotFormatDiagram())
     println(Util.gravizoDotLink(w.dotFormatDiagram()))
     println(Util.teachingmachinesDotLink(w.dotFormatDiagram()))
-    System.exit(1)
-    println(new Test.AUC().get())
+
+    println(w.pea(new Test.AUC()).get())
     assert(Test.runs == 5)
     Test.runs = 0
-    println(new Test.AUC().get())
+    println(w.pea(new Test.AUC()).get())
     assert(Test.runs == 0)
     Test.runs = 0
-    println(new Test.ParsedEphemeral().get())
+    println(w.pea(new Test.ParsedEphemeral()).get())
     assert(Test.runs == 1)
     println("http://g.gravizo.com/g?" +
       new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
