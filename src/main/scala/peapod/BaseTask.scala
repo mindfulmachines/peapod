@@ -14,16 +14,10 @@ abstract class BaseTask(implicit val p: Peapod)  {
   lazy val name: String = baseName
   lazy val versionName: String = name
 
-  protected val version: String = "1"
-  protected lazy val dir = p.path + "/" + name + "/" + recursiveVersionShort
-
-  def recursiveVersion: List[String]
-
-  def recursiveVersionShort: String = {
-    val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
-    val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
-    new String(encodedBytes)
-  }
+  val version: String = "1"
+  protected val dir: String
 
   def exists(): Boolean
+
+  def recursiveVersionShort(): String
 }
