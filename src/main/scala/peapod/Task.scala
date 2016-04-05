@@ -7,8 +7,9 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-abstract class Task [+T: ClassTag](implicit p: Peapod) {
+abstract class Task [+T: ClassTag](implicit p: Peapod) extends BaseTask {
   protected lazy val pea: Pea[T] = p.pea[T](this)
+  protected lazy val dir = p.path + "/" + name + "/" + recursiveVersionShort
 
   protected[peapod] def build(): T
 
@@ -21,13 +22,7 @@ abstract class Task [+T: ClassTag](implicit p: Peapod) {
 
   def exists(): Boolean
 
+  def recursiveVersionShort: String = {
+    pea.recursiveVersionShort
+  }
 }
-
-
-
-object Task {
-  implicit def getAnyTask[T](task: Task[T]): T =
-    task.get()
-}
-
-
