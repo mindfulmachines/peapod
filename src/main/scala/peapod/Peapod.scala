@@ -17,6 +17,7 @@ class Peapod(private[peapod] val path: String,
 
 
   private implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
+
   val sqlCtx =  new SQLContext(sc)
 
   def pea[D: ClassTag](d: Task[D]): Pea[D] = this.synchronized {

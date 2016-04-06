@@ -10,6 +10,7 @@ import org.apache.spark.sql.{Dataset, DataFrame}
 import org.apache.spark.storage.StorageLevel
 
 import scala.collection.immutable.{HashSet, TreeSet}
+import scala.collection.parallel.{ExecutionContextTaskSupport, ForkJoinTaskSupport}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Await, Future}
 import scala.reflect.ClassTag
@@ -18,13 +19,12 @@ import scala.reflect.ClassTag
   * Created by marcin.mejran on 3/28/16.
   */
 class Pea[+D: ClassTag](task: Task[D]) {
-  private implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
-
   override val toString = task.name
+  lazy val versionName = task.versionName
   override val hashCode = task.name.hashCode
-  val version = task.version
+  lazy val version = task.version
 
-  val ephemeral = task.isInstanceOf[EphemeralTask[_]]
+  lazy val ephemeral = task.isInstanceOf[EphemeralTask[_]]
   lazy val exists = task.exists()
 
   var children: Set[Pea[_]] = new HashSet[Pea[_]]()
@@ -51,11 +51,13 @@ class Pea[+D: ClassTag](task: Task[D]) {
     if (cache.get() == null) {
       //For efficiency generate all children get, stored in a list to prevent weak reference loss
       val childGets = if (!exists) {
-        children.par.foreach(c => c.get())
+        val par = children.par
+        par.tasksupport = Pea.tasksupport
+        par.foreach(c => c.get())
       } else {
         Nil
       }
-      val f = Future {
+      val d = {
         val built = task.build()
         if (parents.size > 1) {
           persist(built)
@@ -63,7 +65,6 @@ class Pea[+D: ClassTag](task: Task[D]) {
           built
         }
       }
-      val d = Await.result(f, Duration.Inf)
       cache = new WeakReference[D](d)
     }
     cache.get().asInstanceOf[D]
@@ -94,7 +95,8 @@ class Pea[+D: ClassTag](task: Task[D]) {
 
   //TODO: Cache recursive version so dependencies can be removed if not needed
   def recursiveVersion: List[String] = {
-    toString + ":" + version :: children.flatMap(_.recursiveVersion.map("-" + _)).toList
+    //Sorting first so that changed in ordering of peas doesn't cause new version
+    versionName + ":" + version :: children.toList.sortBy(_.versionName).flatMap(_.recursiveVersion.map("-" + _)).toList
   }
 
   def recursiveVersionShort: String = {
@@ -118,4 +120,9 @@ class Pea[+D: ClassTag](task: Task[D]) {
 object Pea {
   implicit def getAnyTask[T](pea: Pea[T]): T =
     pea.get()
+
+  private val tasksupport =
+    new ExecutionContextTaskSupport(
+      ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+    )
 }
