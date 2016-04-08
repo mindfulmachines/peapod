@@ -1,7 +1,8 @@
 package peapod
 
-import java.util.concurrent.Executors
+import java.util.concurrent.{ConcurrentMap, Executors}
 
+import com.google.common.collect.MapMaker
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
 
@@ -9,11 +10,12 @@ import scala.collection.mutable
 import scala.collection.immutable.TreeSet
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
+import collection.JavaConversions._
 
 class Peapod(private[peapod] val path: String,
               val raw: String,
              private val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
-  private val peas = new mutable.WeakHashMap[String, Pea[_]]
+  private val peas: ConcurrentMap[String, Pea[_]] = new MapMaker().weakValues().makeMap()
 
 
   private implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
@@ -39,6 +41,9 @@ class Peapod(private[peapod] val path: String,
     )
   }
 
+  def size() = {
+    peas.count(_._2 != null)
+  }
 
 }
 

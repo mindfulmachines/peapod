@@ -29,7 +29,7 @@ class Pea[+D: ClassTag](task: Task[D]) {
 
   var children: Set[Pea[_]] = new HashSet[Pea[_]]()
   var parents: Set[Pea[_]] = new HashSet[Pea[_]]()
-  var cache: WeakReference[_] = new WeakReference[D](null.asInstanceOf[D])
+  var cache: Option[_] = None
 
   def addParent(pea: Pea[_]) = this.synchronized {
     parents = parents + pea
@@ -37,6 +37,12 @@ class Pea[+D: ClassTag](task: Task[D]) {
 
   def removeParent(pea: Pea[_]) = this.synchronized {
     parents = parents - pea
+    if(parents.isEmpty) {
+      cache match {
+        case Some(c) => unpersist(c.asInstanceOf[D])
+        case None =>
+      }
+    }
   }
 
   def addChild(pea: Pea[_]) = this.synchronized {
@@ -48,26 +54,31 @@ class Pea[+D: ClassTag](task: Task[D]) {
   }
 
   def get(): D = this.synchronized {
-    if (cache.get() == null) {
-      //For efficiency generate all children get, stored in a list to prevent weak reference loss
-      val childGets = if (!exists) {
-        val par = children.par
-        par.tasksupport = Pea.tasksupport
-        par.foreach(c => c.get())
-      } else {
-        Nil
-      }
-      val d = {
-        val built = task.build()
-        if (parents.size > 1) {
-          persist(built)
+    val d = cache match {
+      case None =>
+        //For efficiency generate all children get, stored in a list to prevent weak reference loss
+        val childGets = if (!exists) {
+          val par = children.par
+          par.tasksupport = Pea.tasksupport
+          par.foreach(c => c.get())
         } else {
-          built
+          Nil
         }
-      }
-      cache = new WeakReference[D](d)
+        val d = {
+          val built = task.build()
+          if (parents.size > 1) {
+            persist(built)
+          } else {
+            built
+          }
+        }
+        cache = Some(d)
+        d.asInstanceOf[D]
+      case Some(c) => c.asInstanceOf[D]
     }
-    cache.get().asInstanceOf[D]
+    children.foreach(c => c.removeParent(this))
+    children = children.empty
+    d
   }
 
   private def persist[V: ClassTag](d: V): V = {
@@ -81,8 +92,7 @@ class Pea[+D: ClassTag](task: Task[D]) {
       ).asInstanceOf[V]
   }
 
-  //TODO: Add unpersist logic to PeaPod
-  /*private def unpersist[V: ClassTag](d: V): V = {
+  private def unpersist[V: ClassTag](d: V): V = {
     (
       d match {
         case d: RDD[_] => d.unpersist()
@@ -91,10 +101,9 @@ class Pea[+D: ClassTag](task: Task[D]) {
         case d: V => d
       }
       ).asInstanceOf[V]
-  }*/
+  }
 
-  //TODO: Cache recursive version so dependencies can be removed if not needed
-  def recursiveVersion: List[String] = {
+  lazy val recursiveVersion: List[String] = {
     //Sorting first so that changed in ordering of peas doesn't cause new version
     versionName + ":" + version :: children.toList.sortBy(_.versionName).flatMap(_.recursiveVersion.map("-" + _)).toList
   }
