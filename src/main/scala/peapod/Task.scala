@@ -17,12 +17,12 @@ abstract class Task [+T: ClassTag] {
 
   protected lazy val dir = p.path + "/" + name + "/" + recursiveVersionShort
 
-  var children: List[() => Pea[_]] = Nil
+  var children: List[Task[_]] = Nil
 
   protected[peapod] def build(): T
 
-  protected def pea[D: ClassTag](t: Task[D]): () => Pea[D] = {
-    val child = () => p.pea(t)
+  protected def pea[D: ClassTag](t: Task[D]): Task[D] = {
+    val child = t
     children = children :+ child
     child
   }
