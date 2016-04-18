@@ -10,11 +10,11 @@ import scala.reflect.ClassTag
 abstract class EphemeralTask[V: ClassTag]
   extends Task[V] with Logging {
 
-  protected def generate(p: Peapod): V
+  protected def generate: V
 
-  protected[peapod] def  build(p: Peapod): V = {
-    logInfo("Loading" + dir(p))
-    generate(p)
+  protected[peapod] def  build(): V = {
+    logInfo("Loading" + dir)
+    generate
   }
-  def exists(p: Peapod): Boolean = false
+  def exists(): Boolean = false
 }
