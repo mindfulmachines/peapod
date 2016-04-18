@@ -22,7 +22,9 @@ abstract class Task [+T: ClassTag] {
   protected[peapod] def build(): T
 
   protected def pea[D: ClassTag](t: Task[D]): () => Pea[D] = {
-    () => p.pea(t)
+    val child = () => p.pea(t)
+    children = children :+ child
+    child
   }
 
   def exists(): Boolean
