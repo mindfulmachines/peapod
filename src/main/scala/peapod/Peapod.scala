@@ -6,9 +6,7 @@ import com.google.common.collect.MapMaker
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
 
-import scala.collection.mutable
-import scala.collection.immutable.TreeSet
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext}
 import scala.reflect.ClassTag
 import collection.JavaConversions._
 

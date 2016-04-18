@@ -41,7 +41,7 @@ class ParsedPages(implicit val p: Peapod) extends StorableTask[RDD[Page]] {
 ```
 To actually run Tasks you need to create a Peapod which "holds" tasks, keeps shared variables (such as where Task outputs are saved/loaded from) and manages shared state between Task instances. In the below example Task state would be stored in "s3n://tm-bucket/peapod-pipeline". If you use s3 be sure to set the appropriate values for fs.s3n.awsAccessKeyId and fs.s3n.awsSecretAccessKey in the SparkContext's hadoopConfiguration.
 ```scala
-val p = new Peapod(
+implicit val p = new Peapod(
   path="s3n://tm-bucket/peapod-pipeline",
   raw="s3n://tm-bucket/peapod-input"
 )
