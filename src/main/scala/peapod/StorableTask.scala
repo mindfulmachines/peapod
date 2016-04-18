@@ -161,45 +161,45 @@ trait Storable[V] {
 
 abstract class StorableTaskBase[V : ClassTag]
   extends Task[V] with Logging  {
-  protected def generate: V
+  protected def generate(p: Peapod): V
 
-  protected[peapod] def build(): V = {
-    logInfo("Loading" + dir)
-    logInfo("Loading" + dir + " Exists: " + exists)
-    val generated = if(! exists()) {
-      val rddGenerated = generate
-      logInfo("Loading" + dir + " Deleting")
-      delete()
-      logInfo("Loading" + dir + " Generating")
-      write(rddGenerated)
-      writeSuccess()
-      read()
+  protected[peapod] def build(p: Peapod): V = {
+    logInfo("Loading" + dir(p))
+    logInfo("Loading" + dir(p) + " Exists: " + exists(p))
+    val generated = if(! exists(p)) {
+      val rddGenerated = generate(p)
+      logInfo("Loading" + dir(p) + " Deleting")
+      delete(p)
+      logInfo("Loading" + dir(p) + " Generating")
+      write(p, rddGenerated)
+      writeSuccess(p)
+      read(p)
     } else {
-      logInfo("Loading" + dir + " Reading")
-      read()
+      logInfo("Loading" + dir(p) + " Reading")
+      read(p)
     }
     generated
   }
-  protected def read(): V
-  protected def write(v: V): Unit
+  protected def read(p: Peapod): V
+  protected def write(p: Peapod, v: V): Unit
 
-  private def writeSuccess(): Unit = {
-    val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
-    filesystem.createNewFile(new Path(dir + "/_SUCCESS"))
+  private def writeSuccess(p: Peapod): Unit = {
+    val filesystem = FileSystem.get(new URI(dir(p)), p.sc.hadoopConfiguration)
+    filesystem.createNewFile(new Path(dir(p) + "/_SUCCESS"))
     filesystem.close()
   }
-  protected def delete() {
-    val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
-    fs.delete(new Path(dir), true)
+  protected def delete(p: Peapod) {
+    val fs = FileSystem.get(new URI(dir(p)), p.sc.hadoopConfiguration)
+    fs.delete(new Path(dir(p)), true)
   }
-  def exists(): Boolean = {
-    val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
-    val path = new Path(dir + "/_SUCCESS")
+  def exists(p: Peapod): Boolean = {
+    val fs = FileSystem.get(new URI(dir(p)), p.sc.hadoopConfiguration)
+    val path = new Path(dir(p) + "/_SUCCESS")
     if (classTag[V] == classTag[DataFrame]) {
       //This is to deal with a bug where Parquet does not write the metadata files
       //This cleans up any directories which were corrupted by the bug
-      val path2 = new Path(dir + "/_metadata")
-      val path3 = new Path(dir + "/_common_metadata")
+      val path2 = new Path(dir(p) + "/_metadata")
+      val path3 = new Path(dir(p) + "/_common_metadata")
       fs.exists(path) && fs.isFile(path) &&
         fs.exists(path2) && fs.isFile(path2)  &&
         fs.exists(path3) && fs.isFile(path3)
@@ -213,12 +213,12 @@ abstract class StorableTaskBase[V : ClassTag]
 abstract class StorableTask[V : ClassTag](implicit c: V => Storable[V])
   extends StorableTaskBase[V] {
 
-  protected def read(): V = {
+  protected def read(p: Peapod): V = {
     c(null.asInstanceOf[V])
-      .readStorable(p,dir)
+      .readStorable(p,dir(p))
   }
-  protected def write(v: V): Unit = {
-    v.writeStorable(p,dir)
+  protected def write(p: Peapod, v: V): Unit = {
+    v.writeStorable(p,dir(p))
   }
 
 }

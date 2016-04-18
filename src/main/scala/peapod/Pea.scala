@@ -18,14 +18,14 @@ import scala.reflect.ClassTag
 /**
   * Created by marcin.mejran on 3/28/16.
   */
-class Pea[+D: ClassTag](task: Task[D]) {
+class Pea[+D: ClassTag](p: Peapod, task: Task[D]) {
   override val toString = task.name
   lazy val versionName = task.versionName
   override val hashCode = task.name.hashCode
   lazy val version = task.version
 
   lazy val ephemeral = task.isInstanceOf[EphemeralTask[_]]
-  lazy val exists = task.exists()
+  lazy val exists = task.exists(p)
 
   var children: Set[Pea[_]] = new HashSet[Pea[_]]()
   var parents: Set[Pea[_]] = new HashSet[Pea[_]]()
@@ -65,7 +65,7 @@ class Pea[+D: ClassTag](task: Task[D]) {
           Nil
         }
         val d = {
-          val built = task.build()
+          val built = task.build(p)
           if (parents.size > 1) {
             persist(built)
           } else {
