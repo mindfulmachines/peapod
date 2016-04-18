@@ -15,10 +15,10 @@ import collection.JavaConversions._
 class Peapod(private[peapod] val path: String,
               val raw: String,
              private val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
-  private val peas: ConcurrentMap[String, Pea[_]] = new MapMaker().weakValues().makeMap()
+  protected val peas: ConcurrentMap[String, Pea[_]] = new MapMaker().weakValues().makeMap()
 
 
-  private implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
+  protected implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
 
   val sqlCtx =  new SQLContext(sc)
 
