@@ -17,21 +17,20 @@ class Peapod(private[peapod] val path: String,
              private val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
   protected val peas: ConcurrentMap[String, Pea[_]] = new MapMaker().weakValues().makeMap()
 
-
   protected implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
 
   val sqlCtx =  new SQLContext(sc)
 
   def apply[D: ClassTag](t: Task[D]): Pea[D] = pea(t)
 
-  def pea[D: ClassTag](t: Task[D]): Pea[D] = this.synchronized {
+  def pea[D: ClassTag](t: Task[D]): Pea[D] = {
     val f= peas.getOrElseUpdate(
       t.name,
       {
-        val pea = new Pea(t)
-        t.children.foreach(_().addParent(pea))
-        t.children.foreach(c => pea.addChild(c()))
-        pea
+        val p = new Pea(t)
+        t.children.foreach(c => pea(c).addParent(p))
+        t.children.foreach(c => p.addChild(pea(c)))
+        p
       }
     ).asInstanceOf[Pea[D]]
     f

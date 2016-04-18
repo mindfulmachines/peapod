@@ -53,16 +53,15 @@ class Pea[+D: ClassTag](task: Task[D]) {
     children = children - pea
   }
 
+  def apply(): D = get()
+
   def get(): D = this.synchronized {
     val d = cache match {
       case None =>
-        //For efficiency generate all children get, stored in a list to prevent weak reference loss
-        val childGets = if (!exists) {
+        if (!exists) {
           val par = children.par
           par.tasksupport = Pea.tasksupport
           par.foreach(c => c.get())
-        } else {
-          Nil
         }
         val d = {
           val built = task.build()
@@ -127,11 +126,10 @@ class Pea[+D: ClassTag](task: Task[D]) {
 }
 
 object Pea {
+  implicit def getAnyTask[T: ClassTag](task: Task[T]): Pea[T] =
+    task.p(task)
 
-  implicit def getAnyTask[T](pea: () => Pea[T]): Pea[T] =
-    pea()
-
-  implicit def getAnyTask[T](pea: Pea[T]): T =
+  implicit def getAnyTask[T: ClassTag](pea: Pea[T]): T =
     pea.get()
 
 

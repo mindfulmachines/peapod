@@ -42,7 +42,7 @@ object Test {
     val raw = pea(new Raw)
     def generate = {
       upRuns()
-      raw.get().toDF()
+      raw().toDF()
     }
   }
 
@@ -51,7 +51,7 @@ object Test {
     val raw = pea(new Raw)
     def generate = {
       upRuns()
-      raw.get().toDF()
+      raw().toDF()
     }
   }
 
@@ -60,7 +60,7 @@ object Test {
     override val version = "2"
     def generate = {
       upRuns()
-      val training = parsed
+      val training = parsed.get()
       val tokenizer = new Tokenizer()
         .setInputCol("text")
         .setOutputCol("TextTokenRaw")
@@ -74,7 +74,7 @@ object Test {
 
       val pipeline = new org.apache.spark.ml.Pipeline()
         .setStages(Array(tokenizer,remover, hashingTF))
-      pipeline.fit(training())
+      pipeline.fit(training)
     }
   }
 
@@ -91,7 +91,7 @@ object Test {
         .setLabelCol("label")
       val pipeline = new org.apache.spark.ml.Pipeline()
         .setStages(Array(lr))
-      pipeline.fit(pipelineFeature().transform(training()))
+      pipeline.fit(pipelineFeature.get().transform(training.get()))
     }
   }
 
@@ -101,9 +101,9 @@ object Test {
     val parsed = pea(new Parsed)
     def generate = {
       upRuns()
-      val training = parsed()
-      val transformed = pipelineFeature().transform(training)
-      val predictions = pipelineLR().transform(transformed)
+      val training = parsed.get()
+      val transformed = pipelineFeature.get().transform(training)
+      val predictions = pipelineLR.get().transform(transformed)
       val evaluator = new BinaryClassificationEvaluator()
       evaluator.evaluate(predictions)
     }
@@ -136,9 +136,9 @@ class Test extends FunSuite {
       path="file://" + path,
       raw="")
 
-    w.pea(new Test.PipelineFeature()).get()
-    w.pea(new Test.ParsedEphemeral())
-    w.pea(new Test.AUC())
+    w(new Test.PipelineFeature()).get()
+    w(new Test.ParsedEphemeral())
+    w(new Test.AUC())
     println(w.dotFormatDiagram())
     println(Util.gravizoDotLink(w.dotFormatDiagram()))
     println(Util.teachingmachinesDotLink(w.dotFormatDiagram()))
