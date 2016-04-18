@@ -22,6 +22,8 @@ class Peapod(val path: String,
 
   val sqlCtx =  new SQLContext(sc)
 
+  def apply[D: ClassTag](t: Task[D]): Pea[D] = pea(t)
+
   def pea[D: ClassTag](t: Task[D]): Pea[D] = this.synchronized {
     val f= peas.getOrElseUpdate(
       t.name,
