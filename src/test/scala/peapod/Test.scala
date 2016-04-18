@@ -26,9 +26,9 @@ object Test {
 
   case class DependencyInput(label: Double, text: String)
 
-  class Raw(implicit _p: Peapod) extends StorableTask[RDD[DependencyInput]] {
+  class Raw extends StorableTask[RDD[DependencyInput]] {
     override val version = "2"
-    def generate = {
+    def generate(p: Peapod) = {
       upRuns()
       p.sc.textFile("file://" + Resources.getResource("dependency.csv").getPath)
         .map(_.split(","))
@@ -36,30 +36,31 @@ object Test {
     }
   }
 
-  class Parsed(implicit _p: Peapod) extends StorableTask[DataFrame] {
-    import p.sqlCtx.implicits._
+  class Parsed extends StorableTask[DataFrame] {
     val raw = pea(new Raw)
-    def generate = {
+    def generate(p: Peapod) = {
+      import p.sqlCtx.implicits._
       upRuns()
-      raw.get().toDF()
+      raw(p).get().toDF()
     }
   }
 
-  class ParsedEphemeral(implicit _p: Peapod) extends EphemeralTask[DataFrame] {
-    import p.sqlCtx.implicits._
+  class ParsedEphemeral extends EphemeralTask[DataFrame] {
+
     val raw = pea(new Raw)
-    def generate = {
+    def generate(p: Peapod) = {
+      import p.sqlCtx.implicits._
       upRuns()
-      raw.get().toDF()
+      raw(p).get().toDF()
     }
   }
 
-  class PipelineFeature(implicit _p: Peapod) extends StorableTask[PipelineModel] {
+  class PipelineFeature extends StorableTask[PipelineModel] {
     val parsed = pea(new Parsed)
     override val version = "2"
-    def generate = {
+    def generate(p: Peapod) = {
       upRuns()
-      val training = parsed.get()
+      val training = parsed(p).get()
       val tokenizer = new Tokenizer()
         .setInputCol("text")
         .setOutputCol("TextTokenRaw")
@@ -77,12 +78,12 @@ object Test {
     }
   }
 
-  class PipelineLR(implicit _p: Peapod) extends StorableTask[PipelineModel] {
-    val pipelineFeature = pea(new PipelineFeature())
+  class PipelineLR extends StorableTask[PipelineModel] {
+    val pipelineFeature = pea(new PipelineFeature)
     val parsed = pea(new Parsed)
-    def generate = {
+    def generate(p: Peapod) = {
       upRuns()
-      val training = parsed.get()
+      val training = parsed(p).get()
       val lr = new LogisticRegression()
         .setMaxIter(25)
         .setRegParam(0.01)
@@ -90,34 +91,34 @@ object Test {
         .setLabelCol("label")
       val pipeline = new org.apache.spark.ml.Pipeline()
         .setStages(Array(lr))
-      pipeline.fit(pipelineFeature.get().transform(training))
+      pipeline.fit(pipelineFeature(p).get().transform(training))
     }
   }
 
-  class AUC(implicit _p: Peapod) extends StorableTask[Double] {
-    val pipelineLR = pea(new PipelineLR())
-    val pipelineFeature = pea(new PipelineFeature())
+  class AUC extends StorableTask[Double] {
+    val pipelineLR = pea(new PipelineLR)
+    val pipelineFeature = pea(new PipelineFeature)
     val parsed = pea(new Parsed)
-    def generate = {
+    def generate(p: Peapod) = {
       upRuns()
-      val training = parsed.get()
-      val transformed = pipelineFeature.get().transform(training)
-      val predictions = pipelineLR.get().transform(transformed)
+      val training = parsed(p).get()
+      val transformed = pipelineFeature(p).get().transform(training)
+      val predictions = pipelineLR(p).get().transform(transformed)
       val evaluator = new BinaryClassificationEvaluator()
       evaluator.evaluate(predictions)
     }
   }
 
-  class AUCPartitioned(val partition: LocalDate)(implicit _p: Peapod)
-    extends StorableTask[Double] with PartitionedTask {
-    val pipelineLR = pea(new PipelineLR())
-    val pipelineFeature = pea(new PipelineFeature())
+  class AUCPartitioned(val partition: LocalDate)
+    extends StorableTask[Double] with PartitionedTask[Double] {
+    val pipelineLR = pea(new PipelineLR)
+    val pipelineFeature = pea(new PipelineFeature)
     val parsed = pea(new Parsed)
-    def generate = {
+    def generate(p: Peapod) = {
       upRuns()
-      val training = parsed.get()
-      val transformed = pipelineFeature.get().transform(training)
-      val predictions = pipelineLR.get().transform(transformed)
+      val training = parsed(p).get()
+      val transformed = pipelineFeature(p).get().transform(training)
+      val predictions = pipelineLR(p).get().transform(transformed)
       val evaluator = new BinaryClassificationEvaluator()
       evaluator.evaluate(predictions)
     }
@@ -135,20 +136,20 @@ class Test extends FunSuite {
       path="file://" + path,
       raw="")
 
-    w.pea(new Test.PipelineFeature()).get()
-    w.pea(new Test.ParsedEphemeral())
-    w.pea(new Test.AUC())
+    w.pea(new Test.PipelineFeature).get()
+    w.pea(new Test.ParsedEphemeral)
+    w.pea(new Test.AUC)
     println(w.dotFormatDiagram())
     println(Util.gravizoDotLink(w.dotFormatDiagram()))
     println(Util.teachingmachinesDotLink(w.dotFormatDiagram()))
 
-    println(w.pea(new Test.AUC()).get())
+    println(w.pea(new Test.AUC).get())
     assert(Test.runs == 5)
     Test.runs = 0
-    println(w.pea(new Test.AUC()).get())
+    println(w.pea(new Test.AUC).get())
     assert(Test.runs == 0)
     Test.runs = 0
-    println(w.pea(new Test.ParsedEphemeral()).get())
+    println(w.pea(new Test.ParsedEphemeral).get())
     assert(Test.runs == 1)
     println("http://g.gravizo.com/g?" +
       new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))

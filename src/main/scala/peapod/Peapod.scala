@@ -12,9 +12,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import collection.JavaConversions._
 
-class Peapod(private[peapod] val path: String,
+class Peapod(val path: String,
               val raw: String,
-             private val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
+              val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
   protected val peas: ConcurrentMap[String, Pea[_]] = new MapMaker().weakValues().makeMap()
 
 
@@ -22,11 +22,14 @@ class Peapod(private[peapod] val path: String,
 
   val sqlCtx =  new SQLContext(sc)
 
-  def pea[D: ClassTag](d: Task[D]): Pea[D] = this.synchronized {
+  def pea[D: ClassTag](t: Task[D]): Pea[D] = this.synchronized {
     val f= peas.getOrElseUpdate(
-      d.name,
-      new Pea(d)
+      t.name,
+      {val pea = new Pea(this, t)
+        t.children.foreach{c => pea.addChild(c(this)); c(this).addParent(pea)}
+        pea}
     ).asInstanceOf[Pea[D]]
+
     f
   }
 
