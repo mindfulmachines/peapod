@@ -127,8 +127,14 @@ class Pea[+D: ClassTag](task: Task[D]) {
 }
 
 object Pea {
+
+  implicit def getAnyTask[T](pea: () => Pea[T]): Pea[T] =
+    pea()
+
   implicit def getAnyTask[T](pea: Pea[T]): T =
     pea.get()
+
+
 
   private val tasksupport =
     new ExecutionContextTaskSupport(

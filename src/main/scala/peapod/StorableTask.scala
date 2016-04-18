@@ -159,7 +159,7 @@ trait Storable[V] {
 }
 
 
-abstract class StorableTaskBase[V : ClassTag](implicit p: Peapod)
+abstract class StorableTaskBase[V : ClassTag]
   extends Task[V] with Logging  {
   protected def generate: V
 
@@ -210,7 +210,7 @@ abstract class StorableTaskBase[V : ClassTag](implicit p: Peapod)
   }
 }
 
-abstract class StorableTask[V : ClassTag](implicit p: Peapod, c: V => Storable[V])
+abstract class StorableTask[V : ClassTag](implicit c: V => Storable[V])
   extends StorableTaskBase[V] {
 
   protected def read(): V = {

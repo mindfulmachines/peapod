@@ -16,6 +16,7 @@ import org.apache.spark.sql.DataFrame
 import org.joda.time.LocalDate
 import org.scalatest.FunSuite
 import StorableTask._
+import Pea._
 
 object Test {
   var runs = 0
@@ -26,7 +27,7 @@ object Test {
 
   case class DependencyInput(label: Double, text: String)
 
-  class Raw(implicit _p: Peapod) extends StorableTask[RDD[DependencyInput]] {
+  class Raw(implicit val p: Peapod) extends StorableTask[RDD[DependencyInput]] {
     override val version = "2"
     def generate = {
       upRuns()
@@ -36,7 +37,7 @@ object Test {
     }
   }
 
-  class Parsed(implicit _p: Peapod) extends StorableTask[DataFrame] {
+  class Parsed(implicit val p: Peapod) extends StorableTask[DataFrame] {
     import p.sqlCtx.implicits._
     val raw = pea(new Raw)
     def generate = {
@@ -45,7 +46,7 @@ object Test {
     }
   }
 
-  class ParsedEphemeral(implicit _p: Peapod) extends EphemeralTask[DataFrame] {
+  class ParsedEphemeral(implicit val p: Peapod) extends EphemeralTask[DataFrame] {
     import p.sqlCtx.implicits._
     val raw = pea(new Raw)
     def generate = {
@@ -54,12 +55,12 @@ object Test {
     }
   }
 
-  class PipelineFeature(implicit _p: Peapod) extends StorableTask[PipelineModel] {
+  class PipelineFeature(implicit val p: Peapod) extends StorableTask[PipelineModel] {
     val parsed = pea(new Parsed)
     override val version = "2"
     def generate = {
       upRuns()
-      val training = parsed.get()
+      val training = parsed
       val tokenizer = new Tokenizer()
         .setInputCol("text")
         .setOutputCol("TextTokenRaw")
@@ -73,16 +74,16 @@ object Test {
 
       val pipeline = new org.apache.spark.ml.Pipeline()
         .setStages(Array(tokenizer,remover, hashingTF))
-      pipeline.fit(training)
+      pipeline.fit(training())
     }
   }
 
-  class PipelineLR(implicit _p: Peapod) extends StorableTask[PipelineModel] {
+  class PipelineLR(implicit val p: Peapod) extends StorableTask[PipelineModel] {
     val pipelineFeature = pea(new PipelineFeature())
     val parsed = pea(new Parsed)
     def generate = {
       upRuns()
-      val training = parsed.get()
+      val training = parsed
       val lr = new LogisticRegression()
         .setMaxIter(25)
         .setRegParam(0.01)
@@ -90,34 +91,34 @@ object Test {
         .setLabelCol("label")
       val pipeline = new org.apache.spark.ml.Pipeline()
         .setStages(Array(lr))
-      pipeline.fit(pipelineFeature.get().transform(training))
+      pipeline.fit(pipelineFeature().transform(training()))
     }
   }
 
-  class AUC(implicit _p: Peapod) extends StorableTask[Double] {
+  class AUC(implicit val p: Peapod) extends StorableTask[Double] {
     val pipelineLR = pea(new PipelineLR())
     val pipelineFeature = pea(new PipelineFeature())
     val parsed = pea(new Parsed)
     def generate = {
       upRuns()
-      val training = parsed.get()
-      val transformed = pipelineFeature.get().transform(training)
-      val predictions = pipelineLR.get().transform(transformed)
+      val training = parsed()
+      val transformed = pipelineFeature().transform(training)
+      val predictions = pipelineLR().transform(transformed)
       val evaluator = new BinaryClassificationEvaluator()
       evaluator.evaluate(predictions)
     }
   }
 
-  class AUCPartitioned(val partition: LocalDate)(implicit _p: Peapod)
-    extends StorableTask[Double] with PartitionedTask {
+  class AUCPartitioned(val partition: LocalDate)(implicit val p: Peapod)
+    extends StorableTask[Double] with PartitionedTask[Double] {
     val pipelineLR = pea(new PipelineLR())
     val pipelineFeature = pea(new PipelineFeature())
     val parsed = pea(new Parsed)
     def generate = {
       upRuns()
-      val training = parsed.get()
-      val transformed = pipelineFeature.get().transform(training)
-      val predictions = pipelineLR.get().transform(transformed)
+      val training = parsed()
+      val transformed = pipelineFeature().transform(training)
+      val predictions = pipelineLR().transform(transformed)
       val evaluator = new BinaryClassificationEvaluator()
       evaluator.evaluate(predictions)
     }

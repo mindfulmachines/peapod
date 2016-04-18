@@ -22,10 +22,17 @@ class Peapod(private[peapod] val path: String,
 
   val sqlCtx =  new SQLContext(sc)
 
-  def pea[D: ClassTag](d: Task[D]): Pea[D] = this.synchronized {
+  def apply[D: ClassTag](t: Task[D]): Pea[D] = pea(t)
+
+  def pea[D: ClassTag](t: Task[D]): Pea[D] = this.synchronized {
     val f= peas.getOrElseUpdate(
-      d.name,
-      new Pea(d)
+      t.name,
+      {
+        val pea = new Pea(t)
+        t.children.foreach(_().addParent(pea))
+        t.children.foreach(c => pea.addChild(c()))
+        pea
+      }
     ).asInstanceOf[Pea[D]]
     f
   }
