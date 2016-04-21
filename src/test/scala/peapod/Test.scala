@@ -109,20 +109,6 @@ object Test {
     }
   }
 
-  class AUCPartitioned(val partition: LocalDate)(implicit val p: Peapod)
-    extends StorableTask[Double] with PartitionedTask[Double] {
-    val pipelineLR = pea(new PipelineLR())
-    val pipelineFeature = pea(new PipelineFeature())
-    val parsed = pea(new Parsed)
-    def generate = {
-      upRuns()
-      val training = parsed()
-      val transformed = pipelineFeature().transform(training)
-      val predictions = pipelineLR().transform(transformed)
-      val evaluator = new BinaryClassificationEvaluator()
-      evaluator.evaluate(predictions)
-    }
-  }
 }
 
 class Test extends FunSuite {
@@ -154,8 +140,5 @@ class Test extends FunSuite {
     println("http://g.gravizo.com/g?" +
       new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
 
-
-
-    println(w.pea(new Test.AUCPartitioned(new LocalDate)).get())
   }
 }

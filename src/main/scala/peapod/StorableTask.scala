@@ -162,6 +162,7 @@ trait Storable[V] {
 abstract class StorableTaskBase[V : ClassTag]
   extends Task[V] with Logging  {
   protected def generate: V
+  val storable = true
 
   protected[peapod] def build(): V = {
     logInfo("Loading" + dir)

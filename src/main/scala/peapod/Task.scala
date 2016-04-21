@@ -13,6 +13,8 @@ abstract class Task [+T: ClassTag] {
   lazy val name: String = baseName
   lazy val versionName: String = name
 
+  val storable: Boolean
+
   val version: String = "1"
 
   protected lazy val dir = p.path + "/" + name + "/" + recursiveVersionShort
