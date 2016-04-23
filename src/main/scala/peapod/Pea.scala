@@ -39,7 +39,7 @@ class Pea[+D: ClassTag](task: Task[D]) {
     parents = parents - pea
     if(parents.isEmpty) {
       cache match {
-        case Some(c) => unpersist(c.asInstanceOf[D])
+        case Some(c) => //unpersist(c.asInstanceOf[D])
         case None =>
       }
     }
