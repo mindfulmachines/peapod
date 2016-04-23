@@ -6,13 +6,13 @@ import com.google.common.collect.MapMaker
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
 
-import scala.concurrent.{ExecutionContext}
+import scala.concurrent.ExecutionContext
 import scala.reflect.ClassTag
 import collection.JavaConversions._
 
-class Peapod(private[peapod] val path: String,
+class Peapod( val path: String,
               val raw: String,
-             private val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
+              val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
   protected val peas: ConcurrentMap[String, Pea[_]] = new MapMaker().weakValues().makeMap()
 
   protected implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
