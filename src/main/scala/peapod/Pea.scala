@@ -31,11 +31,11 @@ class Pea[+D: ClassTag](task: Task[D]) {
   var parents: Set[Pea[_]] = new HashSet[Pea[_]]()
   var cache: Option[_] = None
 
-  def addParent(pea: Pea[_]) = this.synchronized {
+  private[peapod] def addParent(pea: Pea[_]) = parents.synchronized {
     parents = parents + pea
   }
 
-  def removeParent(pea: Pea[_]) = this.synchronized {
+  private[peapod] def removeParent(pea: Pea[_]) = parents.synchronized {
     parents = parents - pea
     if(parents.isEmpty) {
       cache match {
@@ -45,11 +45,11 @@ class Pea[+D: ClassTag](task: Task[D]) {
     }
   }
 
-  def addChild(pea: Pea[_]) = this.synchronized {
+  private[peapod] def addChild(pea: Pea[_]) = children.synchronized {
     children = children + pea
   }
 
-  def removeChild(pea: Pea[_]) = this.synchronized {
+  private[peapod] def removeChild(pea: Pea[_]) = children.synchronized {
     children = children - pea
   }
 
@@ -100,17 +100,6 @@ class Pea[+D: ClassTag](task: Task[D]) {
         case d: V => d
       }
       ).asInstanceOf[V]
-  }
-
-  lazy val recursiveVersion: List[String] = {
-    //Sorting first so that changed in ordering of peas doesn't cause new version
-    versionName + ":" + version :: children.toList.sortBy(_.versionName).flatMap(_.recursiveVersion.map("-" + _)).toList
-  }
-
-  def recursiveVersionShort: String = {
-    val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
-    val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
-    new String(encodedBytes)
   }
 
   /*

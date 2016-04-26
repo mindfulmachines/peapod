@@ -31,7 +31,24 @@ abstract class Task [+T: ClassTag] {
 
   def exists(): Boolean
 
+  lazy val recursiveVersion: List[String] = {
+    //Sorting first so that changed in ordering of peas doesn't cause new version
+    versionName + ":" + version :: children.toList.sortBy(_.versionName).flatMap(_.recursiveVersion.map("-" + _)).toList
+  }
+
   def recursiveVersionShort: String = {
-    p(this).recursiveVersionShort
+    val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
+    val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
+    new String(encodedBytes)
+  }
+
+
+  override def toString: String = {
+    name
+  }
+
+
+  override def hashCode: Int = {
+    toString.hashCode
   }
 }

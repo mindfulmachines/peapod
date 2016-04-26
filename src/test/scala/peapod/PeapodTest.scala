@@ -18,7 +18,7 @@ import org.scalatest.FunSuite
 import StorableTask._
 import Pea._
 
-object Test {
+object PeapodTest {
   var runs = 0
 
   def upRuns() = this.synchronized {
@@ -111,7 +111,7 @@ object Test {
 
 }
 
-class Test extends FunSuite {
+class PeapodTest extends FunSuite {
   test("testRunWorkflow") {
     implicit val sc = generic.Spark.sc
     val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
@@ -122,23 +122,37 @@ class Test extends FunSuite {
       path="file://" + path,
       raw="")
 
-    w(new Test.PipelineFeature()).get()
-    w(new Test.ParsedEphemeral())
-    w(new Test.AUC())
+    w(new PeapodTest.PipelineFeature()).get()
+    w(new PeapodTest.ParsedEphemeral())
+    w(new PeapodTest.AUC())
     println(w.dotFormatDiagram())
     println(Util.gravizoDotLink(w.dotFormatDiagram()))
     println(Util.teachingmachinesDotLink(w.dotFormatDiagram()))
 
-    println(w.pea(new Test.AUC()).get())
-    assert(Test.runs == 5)
-    Test.runs = 0
-    println(w.pea(new Test.AUC()).get())
-    assert(Test.runs == 0)
-    Test.runs = 0
-    println(w.pea(new Test.ParsedEphemeral()).get())
-    assert(Test.runs == 1)
+    println(w.pea(new PeapodTest.AUC()).get())
+    assert(PeapodTest.runs == 5)
+    PeapodTest.runs = 0
+    println(w.pea(new PeapodTest.AUC()).get())
+    assert(PeapodTest.runs == 0)
+    PeapodTest.runs = 0
+    println(w.pea(new PeapodTest.ParsedEphemeral()).get())
+    assert(PeapodTest.runs == 1)
     println("http://g.gravizo.com/g?" +
       new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
 
+  }
+
+  test("testRunWorkflowConcurrent") {
+    implicit val sc = generic.Spark.sc
+    val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
+    val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
+    new File(path).mkdir()
+    new File(path).deleteOnExit()
+    implicit val w = new Peapod(
+      path="file://" + path,
+      raw="")
+
+    (1 to 10).par.foreach{i => w.pea(new PeapodTest.AUC()).get()}
+    assert(PeapodTest.runs == 6)
   }
 }

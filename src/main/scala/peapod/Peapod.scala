@@ -13,25 +13,27 @@ import collection.JavaConversions._
 class Peapod( val path: String,
               val raw: String,
               val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
-  protected val peas: ConcurrentMap[String, Pea[_]] = new MapMaker().weakValues().makeMap()
-
-  protected implicit val ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
+  protected val peas: ConcurrentMap[String, Pea[_]] =
+    new MapMaker().weakValues().concurrencyLevel(1).makeMap()
 
   val sqlCtx =  new SQLContext(sc)
 
   def apply[D: ClassTag](t: Task[D]): Pea[D] = pea(t)
 
-  def pea[D: ClassTag](t: Task[D]): Pea[D] = {
-    val f= peas.getOrElseUpdate(
+  private def generatePea[D: ClassTag](t: Task[D]): Pea[D] = {
+    peas.getOrElseUpdate(
       t.name,
       {
         val p = new Pea(t)
-        t.children.foreach(c => pea(c).addParent(p))
-        t.children.foreach(c => p.addChild(pea(c)))
+        t.children.foreach(c => generatePea(c).addParent(p))
+        t.children.foreach(c => p.addChild(generatePea(c)))
         p
       }
     ).asInstanceOf[Pea[D]]
-    f
+  }
+
+  def pea[D: ClassTag](t: Task[D]): Pea[D] = this.synchronized {
+    generatePea(t)
   }
 
 
