@@ -3,6 +3,7 @@ package peapod
 import java.util.concurrent.{ConcurrentMap, Executors}
 
 import com.google.common.collect.MapMaker
+import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
 
@@ -12,7 +13,7 @@ import collection.JavaConversions._
 
 class Peapod( val path: String,
               val raw: String,
-              val persistentCache: Boolean= false)(implicit val sc: SparkContext) {
+              val conf: Config = ConfigFactory.empty())(implicit val sc: SparkContext) {
   protected val peas: ConcurrentMap[String, Pea[_]] =
     new MapMaker().weakValues().concurrencyLevel(1).makeMap()
 
