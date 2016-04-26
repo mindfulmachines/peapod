@@ -112,6 +112,26 @@ object PeapodTest {
 }
 
 class PeapodTest extends FunSuite {
+  test("testRunWorkflowConcurrentCache") {
+    implicit val sc = generic.Spark.sc
+    val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
+    val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
+    new File(path).mkdir()
+    new File(path).deleteOnExit()
+    implicit val w = new Peapod(
+      path="file://" + path,
+      raw="")
+
+
+    PeapodTest.runs = 0
+    val pea = w.pea(new PeapodTest.AUC())
+    (1 to 10).par.foreach{i => w.pea(new PeapodTest.AUC()).get()}
+    assert(PeapodTest.runs == 5)
+    Thread.sleep(1000)
+    PeapodTest.runs = 0
+    (1 to 10).par.foreach{i => w.pea(new PeapodTest.AUC()).get()}
+    assert(PeapodTest.runs == 0)
+  }
   test("testRunWorkflow") {
     implicit val sc = generic.Spark.sc
     val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
@@ -122,6 +142,7 @@ class PeapodTest extends FunSuite {
       path="file://" + path,
       raw="")
 
+    PeapodTest.runs = 0
     w(new PeapodTest.PipelineFeature()).get()
     w(new PeapodTest.ParsedEphemeral())
     w(new PeapodTest.AUC())
@@ -152,7 +173,9 @@ class PeapodTest extends FunSuite {
       path="file://" + path,
       raw="")
 
+    PeapodTest.runs = 0
     (1 to 10).par.foreach{i => w.pea(new PeapodTest.AUC()).get()}
-    assert(PeapodTest.runs == 6)
+    assert(PeapodTest.runs == 5)
   }
+
 }
