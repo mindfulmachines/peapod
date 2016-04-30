@@ -5,27 +5,28 @@ import java.util.concurrent.Executors
 
 import org.apache.commons.codec.binary.Base64
 import org.apache.hadoop.io.MD5Hash
+import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Dataset, DataFrame}
+import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.storage.StorageLevel
 
 import scala.collection.immutable.{HashSet, TreeSet}
 import scala.collection.parallel.{ExecutionContextTaskSupport, ForkJoinTaskSupport}
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 /**
   * Created by marcin.mejran on 3/28/16.
   */
-class Pea[+D: ClassTag](task: Task[D]) {
+class Pea[+D: ClassTag](task: Task[D]) extends Logging {
   override val toString = task.name
   lazy val versionName = task.versionName
   override val hashCode = task.name.hashCode
   lazy val version = task.version
 
   lazy val ephemeral = task.isInstanceOf[EphemeralTask[_]]
-  lazy val exists = task.exists()
+  def exists = task.exists()
 
   var children: Set[Pea[_]] = new HashSet[Pea[_]]()
   var parents: Set[Pea[_]] = new HashSet[Pea[_]]()
@@ -55,6 +56,18 @@ class Pea[+D: ClassTag](task: Task[D]) {
 
   def apply(): D = get()
 
+  def build(): D = {
+    if(! task.exists()) {
+      logInfo("Loading" + this + " Deleting")
+      task.delete()
+      logInfo("Loading" + this + " Generating")
+      task.build()
+    } else {
+      logInfo("Loading" + this + " Reading")
+      task.load()
+    }
+  }
+
   def get(): D = this.synchronized {
     val d = cache match {
       case None =>
@@ -64,7 +77,7 @@ class Pea[+D: ClassTag](task: Task[D]) {
           par.foreach(c => c.get())
         }
         val d = {
-          val built = task.build()
+          val built = build()
           if (parents.size > 1) {
             persist(built)
           } else {

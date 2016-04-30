@@ -14,9 +14,11 @@ abstract class EphemeralTask[V: ClassTag]
 
   protected def generate: V
 
-  protected[peapod] def  build(): V = {
+  def  build(): V = {
     logInfo("Loading" + dir)
     generate
   }
   def exists(): Boolean = false
+  def delete() {}
+  def load(): V = {build()}
 }

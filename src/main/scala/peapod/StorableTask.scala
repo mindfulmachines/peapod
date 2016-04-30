@@ -164,32 +164,25 @@ abstract class StorableTaskBase[V : ClassTag]
   protected def generate: V
   val storable = true
 
-  protected[peapod] def build(): V = {
-    logInfo("Loading" + dir)
-    logInfo("Loading" + dir + " Exists: " + exists)
-    val generated = if(! exists()) {
-      val rddGenerated = generate
-      logInfo("Loading" + dir + " Deleting")
-      delete()
-      logInfo("Loading" + dir + " Generating")
-      write(rddGenerated)
-      writeSuccess()
-      read()
-    } else {
-      logInfo("Loading" + dir + " Reading")
-      read()
-    }
-    generated
+  def build(): V = {
+    write(generate)
+    writeSuccess()
+    read()
   }
+  def load(): V = {
+    read()
+  }
+
   protected def read(): V
   protected def write(v: V): Unit
+
 
   private def writeSuccess(): Unit = {
     val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     filesystem.createNewFile(new Path(dir + "/_SUCCESS"))
     filesystem.close()
   }
-  protected def delete() {
+  def delete() {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     fs.delete(new Path(dir), true)
   }

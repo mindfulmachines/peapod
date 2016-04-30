@@ -26,7 +26,7 @@ abstract class Task [+T: ClassTag] {
 
   var children: List[Task[_]] = Nil
 
-  protected[peapod] def build(): T
+  def build(): T
 
   protected def pea[D: ClassTag](t: Task[D]): Task[D] = {
     val child = t
@@ -35,6 +35,10 @@ abstract class Task [+T: ClassTag] {
   }
 
   def exists(): Boolean
+
+  def delete()
+
+  def load() : T
 
   lazy val recursiveVersion: List[String] = {
     //Sorting first so that changed in ordering of peas doesn't cause new version
