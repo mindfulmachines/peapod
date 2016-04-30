@@ -27,8 +27,10 @@ object PeapodTest {
 
   case class DependencyInput(label: Double, text: String)
 
-  class Raw(implicit val p: Peapod) extends StorableTask[RDD[DependencyInput]] {
+  class Raw(implicit val p: Peapod) extends StorableTask[RDD[DependencyInput]]
+     {
     override val version = "2"
+    override val description = "Loading data from dependency.csv"
     def generate = {
       upRuns()
       p.sc.textFile("file://" + Resources.getResource("dependency.csv").getPath)
@@ -95,7 +97,8 @@ object PeapodTest {
     }
   }
 
-  class AUC(implicit val p: Peapod) extends StorableTask[Double] {
+  class AUC(implicit val p: Peapod) extends StorableTask[Double]  {
+    override val description = "AUC generated for a model"
     val pipelineLR = pea(new PipelineLR())
     val pipelineFeature = pea(new PipelineFeature())
     val parsed = pea(new Parsed)
@@ -112,15 +115,32 @@ object PeapodTest {
 }
 
 class PeapodTest extends FunSuite {
-  test("testRunWorkflowConcurrentCache") {
-    implicit val sc = generic.Spark.sc
+  test("testMetaData") {
     val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
     val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
     new File(path).mkdir()
     new File(path).deleteOnExit()
     implicit val w = new Peapod(
       path="file://" + path,
-      raw="")
+      raw="")(generic.Spark.sc)
+
+    assert(new PeapodTest.AUC().metadata() ==
+      "peapod.PeapodTest$AUC:1\n" +
+        "AUC generated for a model\n" +
+        "-peapod.PeapodTest$PipelineFeature:2\n" +
+        "-peapod.PeapodTest$Parsed:1\n" +
+        "-peapod.PeapodTest$Raw:2\n" +
+        "--Loading data from dependency.csv"
+    )
+  }
+  test("testRunWorkflowConcurrentCache") {
+    val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
+    val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
+    new File(path).mkdir()
+    new File(path).deleteOnExit()
+    implicit val w = new Peapod(
+      path="file://" + path,
+      raw="")(generic.Spark.sc)
 
 
     PeapodTest.runs = 0
@@ -133,14 +153,13 @@ class PeapodTest extends FunSuite {
     assert(PeapodTest.runs == 0)
   }
   test("testRunWorkflow") {
-    implicit val sc = generic.Spark.sc
     val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
     val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
     new File(path).mkdir()
     new File(path).deleteOnExit()
     implicit val w = new Peapod(
       path="file://" + path,
-      raw="")
+      raw="")(generic.Spark.sc)
 
     PeapodTest.runs = 0
     w(new PeapodTest.PipelineFeature()).get()
@@ -164,18 +183,18 @@ class PeapodTest extends FunSuite {
   }
 
   test("testRunWorkflowConcurrent") {
-    implicit val sc = generic.Spark.sc
     val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
     val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
     new File(path).mkdir()
     new File(path).deleteOnExit()
     implicit val w = new Peapod(
       path="file://" + path,
-      raw="")
+      raw="")(generic.Spark.sc)
 
     PeapodTest.runs = 0
     (1 to 10).par.foreach{i => w.pea(new PeapodTest.AUC()).get()}
     assert(PeapodTest.runs == 5)
   }
+
 
 }

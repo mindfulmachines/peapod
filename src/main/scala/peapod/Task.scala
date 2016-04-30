@@ -9,9 +9,14 @@ import scala.reflect.ClassTag
 
 abstract class Task [+T: ClassTag] {
   val p: Peapod
+
   lazy val baseName: String = this.getClass.getName
   lazy val name: String = baseName
   lazy val versionName: String = name
+  /**
+    * Short description of what this task does
+    */
+  val description: String = ""
 
   val storable: Boolean
 
@@ -37,9 +42,39 @@ abstract class Task [+T: ClassTag] {
   }
 
   def recursiveVersionShort: String = {
-    val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
-    val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
-    new String(encodedBytes)
+    if(p.recursiveVersioning) {
+      val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
+      val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
+      new String(encodedBytes)
+    } else {
+      "latest"
+    }
+  }
+
+
+  /**
+    * Generates a string representation of the metadata for this task including name, version, description and these
+    * for all Tasks that this task is dependent on
+    *
+    * @return String representation of the metadata of this task
+    */
+  def metadata(): String = {
+    val allChildren = children.flatMap(_.children).distinct
+    val out =
+      description match {
+        case "" => name + ":" + version :: Nil
+        case _ => name + ":" + version ::
+          description :: Nil
+      }
+
+    val childMetadata =   allChildren.flatMap{t => t.description match {
+      case "" =>
+        "-" + t.name + ":" + t.version :: Nil
+      case _ => "-" + t.name + ":" + t.version ::
+        "--" + t.description ::
+        Nil
+    }}
+    (out ::: childMetadata).mkString("\n")
   }
 
 
@@ -50,5 +85,12 @@ abstract class Task [+T: ClassTag] {
 
   override def hashCode: Int = {
     toString.hashCode
+  }
+
+  override def equals(o: Any) = {
+    o match {
+      case t: Task[_] => t.toString == this.toString
+      case _ => false
+    }
   }
 }
