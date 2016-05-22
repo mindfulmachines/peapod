@@ -17,6 +17,7 @@ import org.joda.time.LocalDate
 import org.scalatest.FunSuite
 import StorableTask._
 import Pea._
+import peapod.PeapodTest.{AUC, Parsed, PipelineFeature, Raw}
 
 object PeapodTest {
   var runs = 0
@@ -27,9 +28,9 @@ object PeapodTest {
 
   case class DependencyInput(label: Double, text: String)
 
+  @GenVersion
   class Raw(implicit val p: Peapod) extends StorableTask[RDD[DependencyInput]]
      {
-    override val version = "2"
     override val description = "Loading data from dependency.csv"
     def generate = {
       upRuns()
@@ -39,6 +40,7 @@ object PeapodTest {
     }
   }
 
+  @GenVersion
   class Parsed(implicit val p: Peapod) extends StorableTask[DataFrame] {
     import p.sqlCtx.implicits._
     val raw = pea(new Raw)
@@ -48,6 +50,7 @@ object PeapodTest {
     }
   }
 
+  @GenVersion
   class ParsedEphemeral(implicit val p: Peapod) extends EphemeralTask[DataFrame] {
     import p.sqlCtx.implicits._
     val raw = pea(new Raw)
@@ -57,9 +60,9 @@ object PeapodTest {
     }
   }
 
+  @GenVersion
   class PipelineFeature(implicit val p: Peapod) extends StorableTask[PipelineModel] {
     val parsed = pea(new Parsed)
-    override val version = "2"
     def generate = {
       upRuns()
       val training = parsed.get()
@@ -80,6 +83,7 @@ object PeapodTest {
     }
   }
 
+  @GenVersion
   class PipelineLR(implicit val p: Peapod) extends StorableTask[PipelineModel] {
     val pipelineFeature = pea(new PipelineFeature())
     val parsed = pea(new Parsed)
@@ -97,6 +101,7 @@ object PeapodTest {
     }
   }
 
+  @GenVersion
   class AUC(implicit val p: Peapod) extends StorableTask[Double]  {
     override val description = "AUC generated for a model"
     val pipelineLR = pea(new PipelineLR())
@@ -124,13 +129,18 @@ class PeapodTest extends FunSuite {
       path="file://" + path,
       raw="")(generic.Spark.sc)
 
+    val pipelineVers = new PipelineFeature().version
+    val parsedVers = new Parsed().version
+    val rawVers = new Raw().version
+    val aucVers = new AUC().version
+
     assert(new PeapodTest.AUC().metadata() ==
-      "peapod.PeapodTest$AUC:1\n" +
-        "AUC generated for a model\n" +
-        "-peapod.PeapodTest$PipelineFeature:2\n" +
-        "-peapod.PeapodTest$Parsed:1\n" +
-        "-peapod.PeapodTest$Raw:2\n" +
-        "--Loading data from dependency.csv"
+      s"peapod.PeapodTest$$AUC:$aucVers\n" +
+        s"AUC generated for a model\n" +
+        s"-peapod.PeapodTest$$PipelineFeature:$pipelineVers\n" +
+        s"-peapod.PeapodTest$$Parsed:$parsedVers\n" +
+        s"-peapod.PeapodTest$$Raw:$rawVers\n" +
+        s"--Loading data from dependency.csv"
     )
   }
   test("testRunWorkflowConcurrentCache") {

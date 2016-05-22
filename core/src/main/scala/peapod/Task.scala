@@ -3,11 +3,9 @@ package peapod
 import org.apache.commons.codec.binary.Base64
 import org.apache.hadoop.io.MD5Hash
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-abstract class Task [+T: ClassTag] {
+abstract class Task [+T: ClassTag] extends Versioned {
   val p: Peapod
 
   lazy val baseName: String = this.getClass.getName
@@ -19,8 +17,6 @@ abstract class Task [+T: ClassTag] {
   val description: String = ""
 
   val storable: Boolean
-
-  val version: String = "1"
 
   protected lazy val dir = p.path + "/" + name + "/" + recursiveVersionShort
 
@@ -98,3 +94,4 @@ abstract class Task [+T: ClassTag] {
     }
   }
 }
+

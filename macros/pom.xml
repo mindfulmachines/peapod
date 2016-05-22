@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>peapod-macros_2.11</artifactId>
+    <version>0.7-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <parent>
+        <groupId>io.teachingmachines</groupId>
+        <artifactId>peapod_2.11</artifactId>
+        <version>0.7-SNAPSHOT</version>
+    </parent>
+
+    <name>Peapod Macros</name>
+    <description>Helper Macros for Peapod</description>
+    <url>https://github.com/teachingmachines/peapod</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+
+    <developers>
+        <developer>
+            <name>Marcin Mejran</name>
+            <email>marcin@teachingmachines.io</email>
+            <organization>Teaching Machines</organization>
+            <organizationUrl>http://www.teachingmachines.io</organizationUrl>
+        </developer>
+        <developer>
+            <name>Zoe Afshar</name>
+            <email>zoe@teachingmachines.io</email>
+            <organization>Teaching Machines</organization>
+            <organizationUrl>http://www.teachingmachines.io</organizationUrl>
+        </developer>
+    </developers>
+
+
+    <scm>
+        <connection>scm:git:git@github.com:teachingmachines/peapod.git</connection>
+        <developerConnection>scm:git:git@github.com:teachingmachines/peapod.git</developerConnection>
+        <url>git@github.com:teachingmachines/peapod.git</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>${distribution.id}</id>
+            <url>${distribution.snapshots}</url>
+        </snapshotRepository>
+        <repository>
+            <id>${distribution.id}</id>
+            <url>${distribution.releases}/</url>
+        </repository>
+    </distributionManagement>
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.11</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+        </dependency>
+
+    </dependencies>
+
+
+
+    <repositories>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+
+</project>
