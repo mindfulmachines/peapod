@@ -7,11 +7,16 @@
     <groupId>io.teachingmachines</groupId>
     <artifactId>peapod_2.11</artifactId>
     <version>0.7-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>Peapod</name>
     <description>Dependency and data pipeline management framework for Spark and Scala.</description>
     <url>https://github.com/teachingmachines/peapod</url>
+
+    <modules>
+        <module>core</module>
+        <module>macros</module>
+    </modules>
 
     <licenses>
         <license>
@@ -54,70 +59,89 @@
         </repository>
     </distributionManagement>
 
+    <dependencyManagement>
+
+
+        <dependencies>
+
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala-library.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-reflect</artifactId>
+                <version>${scala-library.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest_2.11</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-core_2.11</artifactId>
+                <version>${spark.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-client</artifactId>
+                    </exclusion>
+                </exclusions>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-sql_2.11</artifactId>
+                <version>${spark.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-mllib_2.11</artifactId>
+                <version>${spark.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>${hadoop-client.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>net.java.dev.jets3t</groupId>
+                <artifactId>jets3t</artifactId>
+                <version>${jets3t.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.nscala-time</groupId>
+                <artifactId>nscala-time_2.11</artifactId>
+                <version>${nscala-time.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.typesafe</groupId>
+                <artifactId>config</artifactId>
+                <version>${typesafe-config.version}</version>
+            </dependency>
+
+        </dependencies>
+
+    </dependencyManagement>
     <dependencies>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>2.11.7</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.11</artifactId>
-            <version>2.2.4</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.11</artifactId>
-            <version>1.6.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-client</artifactId>
-                </exclusion>
-            </exclusions>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.11</artifactId>
-            <version>1.6.1</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-mllib_2.11</artifactId>
-            <version>1.6.1</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-            <version>2.7.2</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>net.java.dev.jets3t</groupId>
-            <artifactId>jets3t</artifactId>
-            <version>0.9.4</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.nscala-time</groupId>
-            <artifactId>nscala-time_2.11</artifactId>
-            <version>2.12.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>config</artifactId>
-            <version>1.3.0</version>
         </dependency>
 
     </dependencies>
@@ -201,6 +225,13 @@
                     <recompileMode>incremental</recompileMode>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <compilerPlugins>
+                        <compilerPlugin>
+                            <groupId>org.scalamacros</groupId>
+                            <artifactId>paradise_${scala-library.version}</artifactId>
+                            <version>2.1.0</version>
+                        </compilerPlugin>
+                    </compilerPlugins>
                 </configuration>
                 <executions>
                     <execution>
@@ -266,4 +297,17 @@
             </plugin>
         </plugins>
     </build>
+
+    <properties>
+        <scala-library.version>2.11.7</scala-library.version>
+
+        <spark.version>1.6.1</spark.version>
+        <hadoop-client.version>2.7.2</hadoop-client.version>
+
+        <typesafe-config.version>1.3.0</typesafe-config.version>
+        <nscala-time.version>2.12.0</nscala-time.version>
+        <jets3t.version>0.9.4</jets3t.version>
+
+        <scalatest.version>2.2.4</scalatest.version>
+    </properties>
 </project>
