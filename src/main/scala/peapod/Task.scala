@@ -22,7 +22,12 @@ abstract class Task [+T: ClassTag] {
 
   val version: String = "1"
 
-  protected lazy val dir = p.path + "/" + name + "/" + recursiveVersionShort
+  protected lazy val dir =
+    if(p.recursiveVersioning) {
+      p.path + "/" + name + "/" + recursiveVersionShort
+    } else {
+      p.path + "/" + name + "/" + "latest"
+    }
 
   var children: List[Task[_]] = Nil
 
@@ -46,13 +51,9 @@ abstract class Task [+T: ClassTag] {
   }
 
   def recursiveVersionShort: String = {
-    if(p.recursiveVersioning) {
-      val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
-      val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
-      new String(encodedBytes)
-    } else {
-      "latest"
-    }
+    val bytes = MD5Hash.digest(recursiveVersion.mkString("\n")).getDigest
+    val encodedBytes = Base64.encodeBase64URLSafeString(bytes)
+    new String(encodedBytes)
   }
 
 
@@ -96,5 +97,9 @@ abstract class Task [+T: ClassTag] {
       case t: Task[_] => t.toString == this.toString
       case _ => false
     }
+  }
+
+  def childrenArray() = {
+    children.toArray
   }
 }
