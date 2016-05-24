@@ -68,27 +68,45 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
     }
   }
 
-  def get(): D = this.synchronized {
-    val d = cache match {
+
+  protected def buildCache(): Unit = {
+    cache = cache match {
       case None =>
         if (!exists) {
           val par = children.par
           par.tasksupport = Pea.tasksupport
-          par.foreach(c => c.get())
+          par.foreach(c => c.buildCache())
         }
         val d = {
           val built = build()
-          if (parents.size > 1) {
+          if ((parents.size > 1 || task.isInstanceOf[AlwaysCache]) && ! task.isInstanceOf[NeverCache]) {
             persist(built)
           } else {
             built
           }
         }
-        cache = Some(d)
-        d.asInstanceOf[D]
-      case Some(c) => c.asInstanceOf[D]
+        Some(d)
+      case Some(c) =>
+        if ((parents.size > 1 || task.isInstanceOf[AlwaysCache]) && ! task.isInstanceOf[NeverCache]) {
+          Some(persist(c))
+        } else {
+          cache
+        }
+    }
+  }
+
+  def get(): D = this.synchronized {
+    buildCache()
+    val d = cache match {
+      case None =>
+        throw new Exception("Cache is empty after being set")
+      case Some(c) =>
+        c.asInstanceOf[D]
     }
     children.foreach(c => c.removeParent(this))
+    if (task.storable) {
+      children.foreach(c => c.unpersist())
+    }
     children = children.empty
     d
   }
@@ -113,6 +131,18 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
         case d: V => d
       }
       ).asInstanceOf[V]
+  }
+
+  private[Pea] def unpersist(): Unit = this.synchronized {
+    cache = cache match {
+      case None => None
+      case Some(c) =>
+        if (parents.isEmpty && ! task.isInstanceOf[AlwaysCache]) {
+          Some(unpersist(c))
+        } else {
+          Some(c)
+        }
+    }
   }
 
   /*

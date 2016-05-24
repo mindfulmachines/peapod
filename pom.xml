@@ -6,7 +6,7 @@
 
     <groupId>io.teachingmachines</groupId>
     <artifactId>peapod_2.11</artifactId>
-    <version>0.7-SNAPSHOT</version>
+    <version>0.7-persist-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Peapod</name>

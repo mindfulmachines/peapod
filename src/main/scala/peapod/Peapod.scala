@@ -25,20 +25,24 @@ class Peapod( val path: String,
 
   def apply[D: ClassTag](t: Task[D]): Pea[D] = pea(t)
 
-  private def generatePea[D: ClassTag](t: Task[D]): Pea[D] = {
+  protected def setLinkages(t: Task[_], p: Pea[_]): Unit = {
+    t.children.foreach(c => generatePea(c).addParent(p))
+    t.children.foreach(c => p.addChild(generatePea(c)))
+  }
+
+  protected def generatePea(t: Task[_]): Pea[_] = {
     peas.getOrElseUpdate(
       t.name,
       {
         val p = new Pea(t)
-        t.children.foreach(c => generatePea(c).addParent(p))
-        t.children.foreach(c => p.addChild(generatePea(c)))
+        setLinkages(t,p)
         p
       }
-    ).asInstanceOf[Pea[D]]
+    )
   }
 
   def pea[D: ClassTag](t: Task[D]): Pea[D] = this.synchronized {
-    generatePea(t)
+    generatePea(t).asInstanceOf[Pea[D]]
   }
 
 
