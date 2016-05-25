@@ -26,8 +26,10 @@ class Peapod( val path: String,
   def apply[D: ClassTag](t: Task[D]): Pea[D] = pea(t)
 
   protected def setLinkages(t: Task[_], p: Pea[_]): Unit = {
-    t.children.foreach(c => generatePea(c).addParent(p))
-    t.children.foreach(c => p.addChild(generatePea(c)))
+    if(! p.exists) {
+      t.children.foreach(c => generatePea(c).addParent(p))
+      t.children.foreach(c => p.addChild(generatePea(c)))
+    }
   }
 
   protected def generatePea(t: Task[_]): Pea[_] = {
@@ -45,7 +47,7 @@ class Peapod( val path: String,
     generatePea(t).asInstanceOf[Pea[D]]
   }
 
-
+  //TODO: Fix now that Pea's do not load all their children recursivelly, use Task's instead
   def dotFormatDiagram(): String = {
     DotFormatter.format(
       peas.toList.flatMap(

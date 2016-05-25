@@ -79,7 +79,8 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
         }
         val d = {
           val built = build()
-          if ((parents.size > 1 || task.isInstanceOf[AlwaysCache]) && ! task.isInstanceOf[NeverCache]) {
+          if ((parents.size > 1 || task.isInstanceOf[AlwaysCache] || ! task.storable  )
+            && ! task.isInstanceOf[NeverCache]) {
             persist(built)
           } else {
             built
@@ -87,12 +88,16 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
         }
         Some(d)
       case Some(c) =>
-        if ((parents.size > 1 || task.isInstanceOf[AlwaysCache]) && ! task.isInstanceOf[NeverCache]) {
+        if ((parents.size > 1 || task.isInstanceOf[AlwaysCache] || ! task.storable  )
+          && ! task.isInstanceOf[NeverCache]) {
           Some(persist(c))
         } else {
           cache
         }
     }
+    children.foreach(c => c.removeParent(this))
+    children.foreach(c => c.unpersist())
+    children = children.empty
   }
 
   def get(): D = this.synchronized {
@@ -103,11 +108,6 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
       case Some(c) =>
         c.asInstanceOf[D]
     }
-    children.foreach(c => c.removeParent(this))
-    if (task.storable) {
-      children.foreach(c => c.unpersist())
-    }
-    children = children.empty
     d
   }
 
