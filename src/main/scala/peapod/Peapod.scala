@@ -21,6 +21,9 @@ class Peapod( val path: String,
   protected val peas: ConcurrentMap[String, Pea[_]] =
     new MapMaker().weakValues().concurrencyLevel(1).makeMap()
 
+  protected val tasks: ConcurrentMap[String, Task[_]] =
+    new MapMaker().weakValues().concurrencyLevel(1).makeMap()
+
   lazy val sqlCtx =  new SQLContext(sc)
 
   def apply[D: ClassTag](t: Task[D]): Pea[D] = pea(t)
@@ -33,6 +36,7 @@ class Peapod( val path: String,
   }
 
   protected def generatePea(t: Task[_]): Pea[_] = {
+    tasks.update(t.name,t)
     peas.getOrElseUpdate(
       t.name,
       {
@@ -47,10 +51,9 @@ class Peapod( val path: String,
     generatePea(t).asInstanceOf[Pea[D]]
   }
 
-  //TODO: Fix now that Pea's do not load all their children recursivelly, use Task's instead
   def dotFormatDiagram(): String = {
     DotFormatter.format(
-      peas.toList.flatMap(
+      tasks.toList.flatMap(
         d => d._2.children.map(
           c => (d._2,c)
         )
