@@ -158,8 +158,8 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
 }
 
 object Pea {
-  implicit def getAnyTask[T: ClassTag](task: Task[T]): Pea[T] =
-    task.p(task)
+  implicit def getAnyTask[T: ClassTag](task: WrappedTask[T]): T =
+    task.get()
 
   implicit def getAnyTask[T: ClassTag](pea: Pea[T]): T =
     pea.get()

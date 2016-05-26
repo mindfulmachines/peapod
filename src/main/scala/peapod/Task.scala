@@ -33,10 +33,10 @@ abstract class Task [+T: ClassTag] {
 
   def build(): T
 
-  protected def pea[D: ClassTag](t: Task[D]): Task[D] = {
+  protected def pea[D: ClassTag](t: Task[D]): WrappedTask[D] = {
     val child = t
     children = children :+ child
-    child
+    new WrappedTask[D](p, child)
   }
 
   def exists(): Boolean
