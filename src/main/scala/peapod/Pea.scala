@@ -68,7 +68,7 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
     }
   }
 
-
+  //TODO: Remove auto-persisting of ephemeral tasks, instead keep track recursivelly of child tasks that need to be un-persisted
   protected def buildCache(): Unit = {
     cache = cache match {
       case None =>
