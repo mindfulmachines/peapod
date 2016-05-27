@@ -34,7 +34,7 @@ import peapod.StorableTask._
 class ParsedPages(implicit val p: Peapod) extends StorableTask[RDD[Page]] {
   val rawPages = pea(new RawPages)
   def generate =
-    parsePages(p(rawPages).get()).map(_._2)
+    parsePages(rawPages.get()).map(_._2)
         //Remove duplicate pages with the same title
         .keyBy(_.title).reduceByKey((l,r) => l).map(_._2)
 }
