@@ -1,19 +1,15 @@
 package peapod
 
-import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 
-import org.apache.commons.codec.binary.Base64
-import org.apache.hadoop.io.MD5Hash
 import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.storage.StorageLevel
 
-import scala.collection.immutable.{HashSet, TreeSet}
-import scala.collection.parallel.{ExecutionContextTaskSupport, ForkJoinTaskSupport}
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.collection.immutable.HashSet
+import scala.collection.parallel.ExecutionContextTaskSupport
+import scala.concurrent.ExecutionContext
 import scala.reflect.ClassTag
 
 /**

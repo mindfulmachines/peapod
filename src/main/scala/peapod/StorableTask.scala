@@ -1,18 +1,16 @@
 package peapod
 
-import java.io.{IOException, ObjectInputStream, ObjectOutputStream, ByteArrayOutputStream}
+import java.io.{ByteArrayOutputStream, IOException, ObjectInputStream, ObjectOutputStream}
 import java.net.URI
 
-import org.apache.hadoop.fs.{Path, FileSystem}
-import org.apache.hadoop.io.compress.BZip2Codec
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io._
-import org.apache.spark.{SparkContext, Logging}
+import org.apache.hadoop.io.compress.BZip2Codec
+import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Dataset, DataFrame}
-import org.apache.spark.storage.StorageLevel
-import scala.reflect._
+import org.apache.spark.sql.{DataFrame, Dataset}
 
-import scala.reflect.ClassTag
+import scala.reflect.{ClassTag, _}
 import scala.reflect.runtime.universe._
 
 object StorableTask {

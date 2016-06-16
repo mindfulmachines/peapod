@@ -3,8 +3,6 @@ package peapod
 import org.apache.commons.codec.binary.Base64
 import org.apache.hadoop.io.MD5Hash
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
 abstract class Task [+T: ClassTag] {
@@ -47,7 +45,7 @@ abstract class Task [+T: ClassTag] {
 
   lazy val recursiveVersion: List[String] = {
     //Sorting first so that changed in ordering of peas doesn't cause new version
-    versionName + ":" + version :: children.toList.sortBy(_.versionName).flatMap(_.recursiveVersion.map("-" + _)).toList
+    versionName + ":" + version :: children.sortBy(_.versionName).flatMap(_.recursiveVersion.map("-" + _))
   }
 
   def recursiveVersionShort: String = {
