@@ -63,6 +63,16 @@ class StorableTaskTest extends FunSuite {
     assert(task.load() == 1.0)
   }
 
+  test("testStorageLongTerm") {
+    implicit val p = PeapodGenerator.peapod()
+    val pea = p(new TaskDouble())
+    assert(pea.get() == 1.0)
+
+    val pNew = new Peapod(raw = p.raw, path = p.path)(p.sc)
+    assert(new TaskDouble()(pNew).load() == 1.0)
+
+  }
+
   test("testDouble") {
     implicit val p = PeapodGenerator.peapod()
     val pea = new Pea(new TaskDouble())
