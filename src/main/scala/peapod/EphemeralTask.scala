@@ -15,7 +15,6 @@ abstract class EphemeralTask[V: ClassTag]
   protected def generate: V
 
   def  build(): V = {
-    logInfo("Loading" + dir)
     generate
   }
   def exists(): Boolean = false
