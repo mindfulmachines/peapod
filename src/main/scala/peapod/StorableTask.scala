@@ -189,7 +189,7 @@ abstract class StorableTaskBase[V : ClassTag]
   def exists(): Boolean = {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     val path = new Path(dir + "/_SUCCESS")
-    if (classTag[V] == classTag[DataFrame]) {
+    val exists = if (classTag[V] == classTag[DataFrame]) {
       //This is to deal with a bug where Parquet does not write the metadata files
       //This cleans up any directories which were corrupted by the bug
       val path2 = new Path(dir + "/_metadata")
@@ -200,7 +200,8 @@ abstract class StorableTaskBase[V : ClassTag]
     } else {
       fs.exists(path) && fs.isFile(path)
     }
-
+    fs.close()
+    exists
   }
 }
 
