@@ -164,8 +164,6 @@ object Pea {
   implicit def getAnyTask[T: ClassTag](pea: Pea[T]): T =
     pea.get()
 
-
-
   private val tasksupport =
     new ExecutionContextTaskSupport(
       ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
