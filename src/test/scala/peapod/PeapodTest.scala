@@ -17,6 +17,10 @@ import org.joda.time.LocalDate
 import org.scalatest.FunSuite
 import StorableTask._
 import Pea._
+import generic.PeapodGenerator
+import org.apache.hadoop.fs.Path
+
+import scala.util.Random
 
 object PeapodTest {
   var runs = 0
@@ -116,13 +120,7 @@ object PeapodTest {
 
 class PeapodTest extends FunSuite {
   test("testMetaData") {
-    val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
-    val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
-    new File(path).mkdir()
-    new File(path).deleteOnExit()
-    implicit val w = new Peapod(
-      path="file://" + path,
-      raw="")(generic.Spark.sc)
+    implicit val w = PeapodGenerator.peapod()
 
     assert(new PeapodTest.AUC().metadata() ==
       "peapod.PeapodTest$AUC:1\n" +
@@ -134,17 +132,8 @@ class PeapodTest extends FunSuite {
     )
   }
   test("testRunWorkflowConcurrentCache") {
-    val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
-    val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
-    new File(path).mkdir()
-    new File(path).deleteOnExit()
-    implicit val w = new Peapod(
-      path="file://" + path,
-      raw="")(generic.Spark.sc)
-
-
+    implicit val w = PeapodGenerator.peapod()
     PeapodTest.runs = 0
-    val pea = w.pea(new PeapodTest.AUC())
     (1 to 10).par.foreach{i => w.pea(new PeapodTest.AUC()).get()}
     assert(PeapodTest.runs == 5)
     Thread.sleep(1000)
@@ -153,14 +142,7 @@ class PeapodTest extends FunSuite {
     assert(PeapodTest.runs == 0)
   }
   test("testRunWorkflow") {
-    val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
-    val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
-    new File(path).mkdir()
-    new File(path).deleteOnExit()
-    implicit val w = new Peapod(
-      path="file://" + path,
-      raw="")(generic.Spark.sc)
-
+    implicit val w = PeapodGenerator.peapod()
     PeapodTest.runs = 0
     w(new PeapodTest.PipelineFeature()).get()
     w(new PeapodTest.ParsedEphemeral())
@@ -183,14 +165,7 @@ class PeapodTest extends FunSuite {
   }
 
   test("testRunWorkflowConcurrent") {
-    val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
-    val path = System.getProperty("java.io.tmpdir") + "workflow-" + sdf.format(new Date())
-    new File(path).mkdir()
-    new File(path).deleteOnExit()
-    implicit val w = new Peapod(
-      path="file://" + path,
-      raw="")(generic.Spark.sc)
-
+    implicit val w = PeapodGenerator.peapod()
     PeapodTest.runs = 0
     (1 to 10).par.foreach{i => w.pea(new PeapodTest.AUC()).get()}
     assert(PeapodTest.runs == 5)
