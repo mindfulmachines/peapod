@@ -161,6 +161,7 @@ class PeapodTest extends FunSuite {
     assert(PeapodTest.runs == 1)
     println("http://g.gravizo.com/g?" +
       new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
+    assert(w.size() == 6)
 
   }
 
