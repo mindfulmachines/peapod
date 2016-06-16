@@ -62,7 +62,7 @@ class Peapod( val path: String,
   }
 
   def size() = {
-    peas.count(_._2 != null)
+    tasks.count(_._2 != null)
   }
 
 }

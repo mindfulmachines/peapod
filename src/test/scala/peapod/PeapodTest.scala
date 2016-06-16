@@ -119,18 +119,6 @@ object PeapodTest {
 }
 
 class PeapodTest extends FunSuite {
-  test("testMetaData") {
-    implicit val w = PeapodGenerator.peapod()
-
-    assert(new PeapodTest.AUC().metadata() ==
-      "peapod.PeapodTest$AUC:1\n" +
-        "AUC generated for a model\n" +
-        "-peapod.PeapodTest$PipelineFeature:2\n" +
-        "-peapod.PeapodTest$Parsed:1\n" +
-        "-peapod.PeapodTest$Raw:2\n" +
-        "--Loading data from dependency.csv"
-    )
-  }
   test("testRunWorkflowConcurrentCache") {
     implicit val w = PeapodGenerator.peapod()
     PeapodTest.runs = 0

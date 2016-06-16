@@ -22,7 +22,7 @@ abstract class Task [+T: ClassTag] {
 
   val version: String = "1"
 
-  protected lazy val dir =
+  lazy val dir =
     if(p.recursiveVersioning) {
       p.path + "/" + name + "/" + recursiveVersionShort
     } else {
@@ -64,7 +64,7 @@ abstract class Task [+T: ClassTag] {
     * @return String representation of the metadata of this task
     */
   def metadata(): String = {
-    val allChildren = children.flatMap(_.children).distinct
+    val allChildren = children.distinct
     val out =
       description match {
         case "" => name + ":" + version :: Nil
