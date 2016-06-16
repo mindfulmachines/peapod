@@ -75,7 +75,7 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
         if (!exists) {
           val par = children.par
           par.tasksupport = Pea.tasksupport
-          par.foreach(c => c.buildCache())
+          par.foreach(c => c.get())
         }
         val d = {
           val built = build()
