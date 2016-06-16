@@ -47,6 +47,22 @@ object StorableTaskTest {
   }
 }
 class StorableTaskTest extends FunSuite {
+  test("testStorage") {
+    implicit val p = PeapodGenerator.peapod()
+    val task = new TaskDouble()
+    val pea = p(task)
+    assert(!task.exists())
+    pea.get()
+    assert(task.exists())
+    task.delete()
+    assert(!task.exists())
+    intercept[java.io.FileNotFoundException] {
+      task.load()
+    }
+    assert(task.build() == 1.0)
+    assert(task.load() == 1.0)
+  }
+
   test("testDouble") {
     implicit val p = PeapodGenerator.peapod()
     val pea = new Pea(new TaskDouble())
