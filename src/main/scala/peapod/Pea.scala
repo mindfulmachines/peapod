@@ -154,12 +154,6 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
 }
 
 object Pea {
-  implicit def getAnyTask[T: ClassTag](task: WrappedTask[T]): T =
-    task.get()
-
-  implicit def getAnyTask[T: ClassTag](pea: Pea[T]): T =
-    pea.get()
-
   private val tasksupport =
     new ExecutionContextTaskSupport(
       ExecutionContext.fromExecutor(Executors.newCachedThreadPool())

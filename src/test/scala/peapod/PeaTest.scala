@@ -3,7 +3,7 @@ package peapod
 import generic.PeapodGenerator
 import org.scalatest.FunSuite
 import peapod.PeaTest._
-import Pea._
+import Implicits._
 
 object PeaTest {
   class TaskA(implicit val p: Peapod) extends EphemeralTask[Double]  {
