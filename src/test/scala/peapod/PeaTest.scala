@@ -69,9 +69,7 @@ class PeaTest  extends FunSuite {
     implicit val p = PeapodGenerator.peapod()
     val task = new TaskA()
     val pea = new Pea(task)
-    assert(pea.versionName == "peapod.PeaTest$TaskA")
-    assert(pea.version == "1")
-    assert(pea.ephemeral == true)
+    assert(pea.toString == "peapod.PeaTest$TaskA")
   }
 
   test("testImplicits") {

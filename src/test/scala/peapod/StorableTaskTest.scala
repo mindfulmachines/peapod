@@ -12,6 +12,32 @@ case class Single (value: Double)
 
 object StorableTaskTest {
 
+  class TaskA1(implicit val p: Peapod) extends StorableTask[Double]  {
+    override lazy val name = "TaskA"
+    override val version = "1"
+    override val description = "Return 1 Always"
+    def generate = 1
+  }
+
+  class TaskA2(implicit val p: Peapod) extends StorableTask[Double]  {
+    override lazy val name = "TaskA"
+    override val version = "2"
+    def generate = 1
+  }
+
+  class TaskB1(implicit val p: Peapod) extends StorableTask[Double]  {
+    override lazy val name = "TaskB"
+    override val description = "Return 1 Always"
+    pea(new TaskA1())
+    def generate = 1
+  }
+
+  class TaskB2(implicit val p: Peapod) extends StorableTask[Double]  {
+    override lazy val name = "TaskB"
+    pea(new TaskA2())
+    def generate = 1
+  }
+
   class TaskDouble(implicit val p: Peapod) extends StorableTask[Double] {
     def generate = 1
   }
@@ -47,6 +73,32 @@ object StorableTaskTest {
   }
 }
 class StorableTaskTest extends FunSuite {
+  test("testRecursiveVersion") {
+    val p1 = PeapodGenerator.peapod()
+    val p2 = PeapodGenerator.peapod()
+    val t1 = new TaskB1()(p1)
+    val t2 = new TaskB2()(p2)
+    assert(t1.recursiveVersion == "TaskB:1" :: "-TaskA:1" :: Nil)
+    assert(t2.recursiveVersion== "TaskB:1" :: "-TaskA:2" :: Nil)
+    assert(t1.recursiveVersionShort == "_vl0nfo5QL1AWZuHQUaotQ")
+    assert(t2.recursiveVersionShort == "eSbl8xEbNGEvh7iKBnDChg")
+    assert(t1.dir.endsWith("TaskB/_vl0nfo5QL1AWZuHQUaotQ"))
+    assert(t2.dir.endsWith("TaskB/eSbl8xEbNGEvh7iKBnDChg"))
+  }
+
+  test("testRecursiveVersionLatest") {
+    val p1 = PeapodGenerator.peapodNonRecursive()
+    val p2 = PeapodGenerator.peapodNonRecursive()
+    val t1 = new TaskB1()(p1)
+    val t2 = new TaskB2()(p2)
+    assert(t1.recursiveVersion == "TaskB:1" :: "-TaskA:1" :: Nil)
+    assert(t2.recursiveVersion== "TaskB:1" :: "-TaskA:2" :: Nil)
+    assert(t1.recursiveVersionShort == "_vl0nfo5QL1AWZuHQUaotQ")
+    assert(t2.recursiveVersionShort == "eSbl8xEbNGEvh7iKBnDChg")
+    assert(t1.dir.endsWith("TaskB/latest"))
+    assert(t2.dir.endsWith("TaskB/latest"))
+  }
+
   test("testStorage") {
     implicit val p = PeapodGenerator.peapod()
     val task = new TaskDouble()

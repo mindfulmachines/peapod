@@ -41,8 +41,6 @@ class TaskTest  extends FunSuite {
     assert(t2.recursiveVersion== "TaskB:1" :: "-TaskA:2" :: Nil)
     assert(t1.recursiveVersionShort == "_vl0nfo5QL1AWZuHQUaotQ")
     assert(t2.recursiveVersionShort == "eSbl8xEbNGEvh7iKBnDChg")
-    assert(t1.dir.endsWith("TaskB/_vl0nfo5QL1AWZuHQUaotQ"))
-    assert(t2.dir.endsWith("TaskB/eSbl8xEbNGEvh7iKBnDChg"))
   }
 
   test("testRecursiveVersionLatest") {
@@ -54,8 +52,6 @@ class TaskTest  extends FunSuite {
     assert(t2.recursiveVersion== "TaskB:1" :: "-TaskA:2" :: Nil)
     assert(t1.recursiveVersionShort == "_vl0nfo5QL1AWZuHQUaotQ")
     assert(t2.recursiveVersionShort == "eSbl8xEbNGEvh7iKBnDChg")
-    assert(t1.dir.endsWith("TaskB/latest"))
-    assert(t2.dir.endsWith("TaskB/latest"))
   }
 
   test("testMetaData") {

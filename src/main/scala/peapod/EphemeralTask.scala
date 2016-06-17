@@ -17,7 +17,19 @@ abstract class EphemeralTask[V: ClassTag]
   def  build(): V = {
     generate
   }
+
+  /**
+    * Returns false always for EphemeralTasks
+    */
   def exists(): Boolean = false
+
+  /**
+    * Does nothing for EphemeralTasks
+    */
   def delete() {}
+
+  /**
+    * Generates the output for EphemeralTasks
+    */
   def load(): V = {build()}
 }

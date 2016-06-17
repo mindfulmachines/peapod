@@ -13,19 +13,33 @@ import scala.concurrent.ExecutionContext
 import scala.reflect.ClassTag
 
 /**
-  *
+  * The in memory representation of a Task, provides caching of output. Should not be instantiated directly but only
+  * using Peapod() or Peapod.pea().
   */
-class Pea[+D: ClassTag](task: Task[D]) extends Logging {
+class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
+  /**
+    * Name of the Pea instances, used to uniquely identify a Pea, all Pea's with the same name should be identical
+    */
   override val toString = task.name
-  lazy val versionName = task.versionName
+
+  /**
+    * Hashcode is the name's hascode
+    */
   override val hashCode = task.name.hashCode
-  lazy val version = task.version
 
-  lazy val ephemeral = task.isInstanceOf[EphemeralTask[_]]
-  def exists = task.exists()
-
+  /**
+    * Peas which this Pea is dependent on
+    */
   var children: Set[Pea[_]] = new HashSet[Pea[_]]()
+
+  /**
+    * Peas which depend on this Pea
+    */
   var parents: Set[Pea[_]] = new HashSet[Pea[_]]()
+
+  /**
+    * Store the output of the Task this Pea reperesents
+    */
   var cache: Option[_] = None
 
   private[peapod] def addParent(pea: Pea[_]) = parents.synchronized {
@@ -52,6 +66,10 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
 
   def apply(): D = get()
 
+  /**
+    * Generates the output of the Task this Pea represents, either by loading it from storage or generating it on the
+    * fly
+    */
   def build(): D = {
     if(! task.exists()) {
       logInfo("Loading" + this + " Deleting")
@@ -64,11 +82,14 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
     }
   }
 
+  /**
+    * Generates the cache for this Pea, updating stale parents and children in the process and managing persistance
+    */
   //TODO: Remove auto-persisting of ephemeral tasks, instead keep track recursivelly of child tasks that need to be un-persisted
   protected def buildCache(): Unit = {
     cache = cache match {
       case None =>
-        if (!exists) {
+        if (!task.exists) {
           val par = children.par
           par.tasksupport = Pea.tasksupport
           par.foreach(c => c.get())
@@ -96,6 +117,9 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
     children = children.empty
   }
 
+  /**
+    * Returns the output of the Task this PEa represents and stores the result in the Pea's cache
+    */
   def get(): D = this.synchronized {
     buildCache()
     val d = cache match {
@@ -129,6 +153,9 @@ class Pea[+D: ClassTag](task: Task[D]) extends Logging {
       ).asInstanceOf[V]
   }
 
+  /**
+    * Unpersists the object currently stored in this Pea's cache and updates the cache with the unpersisted version
+    */
   private[Pea] def unpersist(): Unit = this.synchronized {
     cache = cache match {
       case None => None
