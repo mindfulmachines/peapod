@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
 import scala.reflect.ClassTag
 
 /**
-  * Created by marcin.mejran on 3/28/16.
+  *
   */
 class Pea[+D: ClassTag](task: Task[D]) extends Logging {
   override val toString = task.name

@@ -3,7 +3,7 @@ package peapod
 import com.typesafe.config.{Config, ConfigValueFactory}
 
 /**
-  * Created by marcin.mejran on 4/24/16.
+  * Helpful implicits that makes life easier.
   */
 object Implicits {
   implicit class configWithSet(conf: Config) {

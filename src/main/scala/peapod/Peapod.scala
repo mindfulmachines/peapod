@@ -14,8 +14,19 @@ class Peapod( val path: String,
               val raw: String,
               val conf: Config = ConfigFactory.empty())(_sc : => SparkContext) {
 
+  /**
+    * Spark Context
+    */
   lazy val sc = _sc
 
+  /**
+    * SQL Spark Context
+    */
+  lazy val sqlCtx =  new SQLContext(sc)
+
+  /**
+    * Is recursive versioning enabled, used by classes which extend Peapod
+    */
   val recursiveVersioning = true
 
   protected val peas: ConcurrentMap[String, Pea[_]] =
@@ -24,8 +35,9 @@ class Peapod( val path: String,
   protected val tasks: ConcurrentMap[String, Task[_]] =
     new MapMaker().weakValues().concurrencyLevel(1).makeMap()
 
-  lazy val sqlCtx =  new SQLContext(sc)
-
+  /**
+    * Returns a Pea for a Task and caches the Pea
+    */
   def apply[D: ClassTag](t: Task[D]): Pea[D] = pea(t)
 
   protected def setLinkages(t: Task[_], p: Pea[_]): Unit = {
@@ -47,10 +59,16 @@ class Peapod( val path: String,
     )
   }
 
+  /**
+    * Returns a Pea for a Task and caches the Pea
+    */
   def pea[D: ClassTag](t: Task[D]): Pea[D] = this.synchronized {
     generatePea(t).asInstanceOf[Pea[D]]
   }
 
+  /**
+    * Returns the Peapod's Task's in a DOT format graph
+    */
   def dotFormatDiagram(): String = {
     DotFormatter.format(
       tasks.toList.flatMap(
@@ -61,6 +79,9 @@ class Peapod( val path: String,
     )
   }
 
+  /**
+    * Returns the number of Tasks that have been cached by this Peapod instance
+    */
   def size() = {
     tasks.count(_._2 != null)
   }

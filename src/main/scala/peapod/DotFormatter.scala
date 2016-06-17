@@ -1,7 +1,7 @@
 package peapod
 
 /**
-  *
+  * Provides utilities for formatting a DAG of Tasks into a DOT format graph.
   */
 object DotFormatter {
   def format(links: List[(Task[_], Task[_])]): String = {

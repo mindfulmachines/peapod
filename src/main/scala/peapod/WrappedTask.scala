@@ -3,7 +3,7 @@ package peapod
 import scala.reflect.ClassTag
 
 /**
-  * Created by marcin.mejran on 5/26/16.
+  * A Task that can be automatically cached in a Peapod object, used internally for dependencies
   */
 class WrappedTask[+T: ClassTag] (val p: Peapod, val t: Task[T]) {
   def get() : T = {

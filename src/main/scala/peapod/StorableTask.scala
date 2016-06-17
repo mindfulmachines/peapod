@@ -13,8 +13,17 @@ import org.apache.spark.sql.{DataFrame, Dataset}
 import scala.reflect.{ClassTag, _}
 import scala.reflect.runtime.universe._
 
+/**
+  * Helper object that provides methods and classes for allowing various objects to be automatically saved by the
+  * StorableTask classes
+  */
 object StorableTask {
-
+  /**
+    * Helper method for serializing objects into a byte array
+    * @param o Object to be serialized
+    * @tparam T Type to be serialized
+    * @return Byte array of the serialized object
+    */
   private def serialize[T](o: T): Array[Byte] = {
     val bos = new ByteArrayOutputStream()
     val oos = new ObjectOutputStream(bos)
@@ -23,6 +32,13 @@ object StorableTask {
     bos.toByteArray
   }
 
+  /**
+    * Helper function for saving and RDD of arbitrary objects to disk with compression, by default Spark only saves
+    * RDDs to disk without compression.
+    * @param rdd RDD to be saved in a compressed state
+    * @param path The path where the RDD is saved
+    */
+
   private def saveAsCompressedObjectFile(rdd: RDD[_], path: String): Unit = {
     rdd.mapPartitions(iter => iter.grouped(10).map(_.toArray))
       .map(x => (NullWritable.get(), new BytesWritable(StorableTask.serialize(x))))
@@ -30,7 +46,7 @@ object StorableTask {
   }
 
   /**
-    * Reads and write a DataFrame from disc
+    * Reads and writes a DataFrame from disc
     * @param df DataFrame that is being extended
     */
   class DataFrameStorable(df: DataFrame) extends Storable[DataFrame] with Logging {
@@ -67,6 +83,11 @@ object StorableTask {
     }
   }
 
+  /**
+    * Reads and writes a DataSet from disc
+    * @param ds DataSet that is being extended
+    * @tparam W The type of the DataSet that is being stored, must be of type Product
+    */
   class DataSetStorable[W <: Product : TypeTag](ds: Dataset[W]) extends Storable[Dataset[W]] {
     def readStorable(p: Peapod, dir: String): Dataset[W] = {
       import p.sqlCtx.implicits._
@@ -85,6 +106,11 @@ object StorableTask {
     }
   }
 
+  /**
+    * Reads and writes a RDD from disc
+    * @param rdd RDD that is being extended
+    * @tparam W The type of the RDD that is being stored
+    */
   class RDDStorable[W: ClassTag](rdd: RDD[W]) extends Storable[RDD[W]] {
     def readStorable(p: Peapod, dir: String): RDD[W] = {
       p.sc.objectFile[W](dir)
@@ -94,6 +120,11 @@ object StorableTask {
     }
   }
 
+  /**
+    * Reads and writes a Serializable objects from disc
+    * @param s Object that is being extended
+    * @tparam V The type of the Object that is being stored, must extend Serializable
+    */
   class SerializableStorable[V <: Serializable: ClassTag](s: V) extends Storable[V] {
     def readStorable(p: Peapod, dir: String): V = {
       val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
@@ -114,6 +145,14 @@ object StorableTask {
     }
   }
 
+  /**
+    * Reads and writes a Writable objects from disc
+    * @param s Object that is being extended
+    * @param ctw Function that converts Objects of type V to a matching Writable of type W
+    * @param wtc Function that converts Writables of type W to their matching objects of type V
+    * @tparam V The type of the Object that is being stored
+    * @tparam W The type of the Object's Writable interface that is being stored
+    */
   class WritableConvertedStorable[V : ClassTag, W <: Writable: ClassTag]
       (s: V, ctw: V => W, wtc: W => V) extends Storable[V] {
     def readStorable(p: Peapod, dir: String): V = {
@@ -135,28 +174,52 @@ object StorableTask {
   }
 
 
+  /**
+    * Wraps a DataFrame into a Storable
+    */
   implicit def dfToStorable(df: DataFrame): Storable[DataFrame] =
     new DataFrameStorable(df)
+  /**
+    * Wraps a Dataset into a Storable
+    */
   implicit def dsToStorable[W <: Product : TypeTag, V <: Dataset[W]](ds: V): Storable[Dataset[W]] =
     new DataSetStorable[W](ds)
+  /**
+    * Wraps a RDD into a Storable
+    */
   implicit def rddToStorable[W: ClassTag, V <: RDD[W]](rdd: V): Storable[RDD[W]] =
     new RDDStorable[W](rdd)
+  /**
+    * Wraps a Serializable into a Storable
+    */
   implicit def serializableToStorable[V <: Serializable: ClassTag](s: V): Storable[V] =
     new SerializableStorable[V](s)
+  /**
+    * Wraps a Writable into a Storable
+    */
   implicit def writableToStorable[V <: Writable: ClassTag](s: V): Storable[V] =
     new WritableConvertedStorable[V,V](s, v => v, w => w)
+  /**
+    * Wraps a Double into a Storable
+    */
   implicit def doubleToStorable(s: Double): Storable[Double] =
     new WritableConvertedStorable[Double, DoubleWritable](s, new DoubleWritable(_), _.get())
 
 }
 
-
+/**
+  * Helper trait for allowing objects of type V to be serializaed and de-serialized
+  */
 trait Storable[V] {
   def readStorable(p: Peapod, dir: String): V
   def writeStorable(p: Peapod, dir: String)
 }
 
-
+/**
+  * A base Task class which store's it's output to disk automatically based on the Peapod's path variable. It does not
+  * use implicits for automatic type serialization and so must have the write and read methods specified manually in
+  * extending classes.
+  */
 abstract class StorableTaskBase[V : ClassTag]
   extends Task[V] with Logging  {
   protected def generate: V
@@ -203,6 +266,11 @@ abstract class StorableTaskBase[V : ClassTag]
   }
 }
 
+/**
+  * A base Task class which store's it's output to disk automatically based on the Peapod's path variable. It uses
+  * implicits from the StorableTask object for automatically allowing output objects to be serialized based on their
+  * type.
+  */
 abstract class StorableTask[V : ClassTag](implicit c: V => Storable[V])
   extends StorableTaskBase[V] {
 

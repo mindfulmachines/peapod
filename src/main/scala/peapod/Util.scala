@@ -6,6 +6,9 @@ import java.util.zip.GZIPOutputStream
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.net.URLCodec
 
+/**
+  * Helper class
+  */
 object Util {
   @throws(classOf[IOException])
   def compress(data: String): Array[Byte] = {
