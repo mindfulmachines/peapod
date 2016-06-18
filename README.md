@@ -98,5 +98,4 @@ In Spark Notebook you can simply create an XML literal for this:
 
 # The Future
  * Automatic Versioning: Give the option to use the actual code of the task to generate the version and automatically change the version if the code changes.
- * Unit Tests
- * Cleanup
+ * Improve handing of automatic persistence
