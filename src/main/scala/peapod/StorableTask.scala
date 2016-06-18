@@ -225,16 +225,6 @@ abstract class StorableTaskBase[V : ClassTag]
   protected def generate: V
   val storable = true
 
-  /**
-    * The directory where this Task would be stored to disk
-    */
-  lazy val dir =
-    if(p.recursiveVersioning) {
-      p.path + "/" + name + "/" + recursiveVersionShort
-    } else {
-      p.path + "/" + name + "/" + "latest"
-    }
-
   def build(): V = {
     write(generate)
     writeSuccess()

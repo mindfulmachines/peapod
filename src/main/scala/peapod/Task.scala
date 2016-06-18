@@ -44,6 +44,17 @@ abstract class Task [+T: ClassTag] {
   var children: List[Task[_]] = Nil
 
   /**
+    * The directory where this Task would be stored to disk if it is to be stored to disk. This is located here rather
+    * than in StorableTask to allow traits to better override it
+    */
+  lazy val dir =
+    if(p.recursiveVersioning) {
+      p.path + "/" + name + "/" + recursiveVersionShort
+    } else {
+      p.path + "/" + name + "/" + "latest"
+    }
+
+  /**
     * Generates the output of this Task, potentially saving it to persistent storage in the process
     */
   def build(): T
