@@ -120,7 +120,7 @@ class PeapodTest  extends FunSuite {
       "Ddotted%5D%3B%22peapod.PeapodTest%24TaskA%22-%3E%22peapod.PeapodTest%24TaskB%22%3B%7B%20rank%3Dsame%3B%22" +
       "peapod.PeapodTest%24TaskB%22%7D%7B%20rank%3Dsame%3B%22peapod.PeapodTest%24TaskA%22%7D%7D")
 
-    assert(Util.teachingmachinesDotLink(dot) == "http://graphvizserver-env.elasticbeanstalk.com/?H4sIAAAAAAAAAEv" +
+    assert(Util.mindfulmachinesDotLink(dot) == "http://graphvizserver-env.elasticbeanstalk.com/?H4sIAAAAAAAAAEv" +
       "JTC9KLMhQcFeozstPSVWILs5ILEi1TcqviFUqSE0syE_RCwBTIanFJSohicXZTkpARSWVOam2KfklJakpsdZcOFQ6YqjEqVDXDqdt1tU" +
       "KRYl52bbFibmpuAxwUqolQpWjUm0tAJr9mSDwAAAA")
 

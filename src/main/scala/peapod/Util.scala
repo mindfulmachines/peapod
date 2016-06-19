@@ -37,7 +37,7 @@ object Util {
       new URLCodec().encode(dot).replace("+","%20")
   }
 
-  def teachingmachinesDotLink(dot: String): String = {
+  def mindfulmachinesDotLink(dot: String): String = {
     "http://graphvizserver-env.elasticbeanstalk.com/?" +
       new URLCodec().encode(
         Base64.encodeBase64URLSafeString(
