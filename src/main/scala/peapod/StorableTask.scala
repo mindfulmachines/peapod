@@ -6,7 +6,6 @@ import java.net.URI
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io._
 import org.apache.hadoop.io.compress.BZip2Codec
-import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset}
 
