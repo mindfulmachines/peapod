@@ -19,6 +19,48 @@ class PeapodTest  extends FunSuite {
     def generate = 1
   }
 
+  class TaskA1(implicit val p: Peapod) extends StorableTask[Double]  {
+    override lazy val baseName = "TaskA"
+    override val version = "1"
+    override val description = "Return 1 Always"
+    def generate = 1
+  }
+  class TaskA2(implicit val p: Peapod) extends StorableTask[Double]  {
+    override lazy val baseName = "TaskA"
+    override val version = "2"
+    def generate = 1
+  }
+  class TaskB1(implicit val p: Peapod) extends StorableTask[Double]  {
+    override lazy val baseName = "TaskB"
+    override val description = "Return 1 Always"
+    pea(new TaskA1())
+    def generate = 1
+  }
+  class TaskB2(implicit val p: Peapod) extends StorableTask[Double]  {
+    override lazy val baseName = "TaskB"
+    pea(new TaskA2())
+    def generate = 1
+  }
+
+  test("Delete Other Versions") {
+    implicit val p = PeapodGenerator.peapod()
+    p(new TaskB1()).get()
+    assert(new TaskA1().exists())
+    assert(new TaskB1().exists())
+    p.clear()
+    p(new TaskB2()).get()
+    assert(new TaskA1().exists())
+    assert(new TaskA2().exists())
+    assert(new TaskB1().exists())
+    assert(new TaskB2().exists())
+    p.deleteOtherVersions()
+    assert(! new TaskA1().exists())
+    assert(new TaskA2().exists())
+    assert(! new TaskB1().exists())
+    assert(new TaskB2().exists())
+  }
+
+
   test("Dependencies") {
     implicit val p = PeapodGenerator.peapod()
     val peaA = p(new TaskA())
