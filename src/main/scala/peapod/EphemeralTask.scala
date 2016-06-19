@@ -1,7 +1,5 @@
 package peapod
 
-import org.apache.spark.Logging
-
 import scala.reflect.ClassTag
 
 /**

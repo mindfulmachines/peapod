@@ -2,7 +2,6 @@ package peapod
 
 import java.util.concurrent.Executors
 
-import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.storage.StorageLevel
