@@ -171,7 +171,7 @@ class PeapodShutdownHookManager {
 
 }
 
-private class PeapodShutdownHook(private val priority: Int, hook: () => Unit)
+class PeapodShutdownHook(val priority: Int, hook: () => Unit)
   extends Comparable[PeapodShutdownHook] {
 
   override def compareTo(other: PeapodShutdownHook): Int = {
