@@ -2,10 +2,9 @@ package peapod
 
 import generic.PeapodGenerator
 import org.scalatest.FunSuite
-import peapod.PeaTest._
 import Implicits._
 
-object PeaTest {
+class PeaTest  extends FunSuite {
   class TaskA(implicit val p: Peapod) extends EphemeralTask[Double]  {
     def generate = 1
   }
@@ -27,8 +26,6 @@ object PeaTest {
     def generate = c.toDouble
   }
 
-}
-class PeaTest  extends FunSuite {
   test("testChildrenParents") {
     implicit val p = PeapodGenerator.peapod()
     val peaA = new Pea(new TaskA())

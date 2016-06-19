@@ -2,9 +2,8 @@ package peapod
 
 import generic.PeapodGenerator
 import org.scalatest.FunSuite
-import peapod.TaskTest.{TaskA1, TaskB1, TaskB2, TaskC}
 
-object TaskTest {
+class TaskTest  extends FunSuite {
   class TaskA1(implicit val p: Peapod) extends EphemeralTask[Double]  {
     override lazy val baseName = "TaskA"
     override val version = "1"
@@ -30,9 +29,7 @@ object TaskTest {
   class TaskC(implicit val p: Peapod) extends EphemeralTask[Double]  {
     def generate = 1
   }
-}
 
-class TaskTest  extends FunSuite {
   test("testRecursiveVersion") {
     val p1 = PeapodGenerator.peapod()
     val p2 = PeapodGenerator.peapod()

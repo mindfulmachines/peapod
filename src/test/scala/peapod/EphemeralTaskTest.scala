@@ -2,14 +2,12 @@ package peapod
 
 import generic.PeapodGenerator
 import org.scalatest.FunSuite
-import peapod.EphemeralTaskTest.TaskDouble
 
-object EphemeralTaskTest {
+class EphemeralTaskTest extends FunSuite {
   class TaskDouble(implicit val p: Peapod) extends EphemeralTask[Double] {
     def generate = 1
   }
-}
-class EphemeralTaskTest extends FunSuite {
+
   test("testStorage") {
     implicit val p = PeapodGenerator.peapod()
     val task = new TaskDouble()

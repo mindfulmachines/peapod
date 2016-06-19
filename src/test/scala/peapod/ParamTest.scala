@@ -2,9 +2,8 @@ package peapod
 
 import generic.PeapodGenerator
 import org.scalatest.FunSuite
-import peapod.ParamTest.Test
 
-object ParamTest {
+class ParamTest extends FunSuite {
   trait ParamA extends Param {
     val a: String
     param(a)
@@ -17,9 +16,7 @@ object ParamTest {
     extends EphemeralTask[Double] with ParamA with ParamB {
     def generate = 1
   }
-}
 
-class ParamTest extends FunSuite {
   test("Param") {
     val p = PeapodGenerator.peapod()
     val t1 = new Test("a","b")(p)
