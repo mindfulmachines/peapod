@@ -29,10 +29,10 @@ class Peapod( val path: String,
     */
   val recursiveVersioning = true
 
-  protected val peas: ConcurrentMap[String, Pea[_]] =
+  @transient protected val peas: ConcurrentMap[String, Pea[_]] =
     new MapMaker().weakValues().concurrencyLevel(1).makeMap()
 
-  protected val tasks: ConcurrentMap[String, Task[_]] =
+  @transient protected val tasks: ConcurrentMap[String, Task[_]] =
     new MapMaker().weakValues().concurrencyLevel(1).makeMap()
 
   /**
@@ -90,6 +90,14 @@ class Peapod( val path: String,
     */
   def size() = {
     tasks.count(_._2 != null)
+  }
+
+  /**
+    * Remove the output of all Tasks in this Peapod instance from persistent storage if the recursive version differs
+    * from the current version, if there is no output then this should be a no-op rather than throwing an error
+    */
+  def deleteOtherVersions(): Unit = {
+    tasks.foreach(_._2.deleteOtherVersions())
   }
 
   /**
