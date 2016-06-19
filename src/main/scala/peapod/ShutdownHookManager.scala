@@ -117,17 +117,6 @@ object ShutdownHookManager extends Logging {
   def addShutdownHook(priority: Int)(hook: () => Unit): AnyRef = {
     shutdownHooks.add(priority, hook)
   }
-
-  /**
-    * Remove a previously installed shutdown hook.
-    *
-    * @param ref A handle returned by `addShutdownHook`.
-    * @return Whether the hook was removed.
-    */
-  def removeShutdownHook(ref: AnyRef): Boolean = {
-    shutdownHooks.remove(ref)
-  }
-
 }
 
 class PeapodShutdownHookManager {
@@ -163,10 +152,6 @@ class PeapodShutdownHookManager {
       hooks.add(hookRef)
       hookRef
     }
-  }
-
-  def remove(ref: AnyRef): Boolean = {
-    hooks.synchronized { hooks.remove(ref) }
   }
 
 }
