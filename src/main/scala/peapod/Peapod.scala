@@ -48,8 +48,13 @@ class Peapod( val path: String,
     }
   }
 
-  protected def generatePea(t: Task[_]): Pea[_] = {
+  protected def addTask(t: Task[_]): Unit = {
     tasks.update(t.name,t)
+    t.children.foreach(addTask)
+  }
+
+  protected def generatePea(t: Task[_]): Pea[_] = {
+    addTask(t)
     peas.getOrElseUpdate(
       t.name,
       {
@@ -85,6 +90,14 @@ class Peapod( val path: String,
     */
   def size() = {
     tasks.count(_._2 != null)
+  }
+
+  /**
+    * Clear this Peapod instance of all stored data
+    */
+  def clear() = this.synchronized {
+    tasks.clear()
+    peas.clear()
   }
 
 }

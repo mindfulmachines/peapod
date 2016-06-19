@@ -2,7 +2,8 @@ package peapod
 
 import generic.PeapodGenerator
 import org.scalatest.FunSuite
-import peapod.PeapodTest.{TaskA, TaskB}
+import peapod.PeapodTest.{TaskA, TaskB, TaskC}
+import peapod.StorableTask._
 
 object PeapodTest {
   class TaskA(implicit val p: Peapod) extends EphemeralTask[Double]  {
@@ -14,9 +15,14 @@ object PeapodTest {
     def generate = 1
   }
 
+  class TaskC(implicit val p: Peapod) extends StorableTask[Double]  {
+    pea(new TaskB())
+    def generate = 1
+  }
+
 }
 class PeapodTest  extends FunSuite {
-  test("testDependencies") {
+  test("Dependencies") {
     implicit val p = PeapodGenerator.peapod()
     val peaA = p(new TaskA())
     val peaB = p(new TaskB())
@@ -24,7 +30,7 @@ class PeapodTest  extends FunSuite {
     assert(peaB.children == Set(peaA))
   }
 
-  test("testSize") {
+  test("Size") {
     implicit val p = PeapodGenerator.peapod()
     val peaA = p(new TaskA())
     assert(p.size() == 1)
@@ -32,7 +38,37 @@ class PeapodTest  extends FunSuite {
     assert(p.size() == 2)
   }
 
-  test("testDotFormatter") {
+  test("SizeStored") {
+    implicit val p = PeapodGenerator.peapod()
+    p(new TaskC()).get()
+    assert(p.size() == 3)
+    p.clear()
+    assert(p.size() == 0)
+    val peaC = p(new TaskC())
+    assert(peaC.task.exists())
+    assert(p.size() == 3)
+  }
+
+  test("Clear") {
+    implicit val p = PeapodGenerator.peapod()
+    val peaA = p(new TaskA())
+    assert(p.size() == 1)
+    val peaB = p(new TaskB())
+    assert(p.size() == 2)
+    p.clear()
+    assert(p.size() == 0)
+  }
+
+  test("DotFormatterStored") {
+    implicit val p = PeapodGenerator.peapod()
+    p(new TaskC()).get()
+    val dot = p.dotFormatDiagram()
+    p.clear()
+    p(new TaskC())
+    assert(p.dotFormatDiagram() == dot)
+  }
+
+  test("DotFormatter") {
     implicit val p = PeapodGenerator.peapod()
     p(new TaskB())
     val dot = p.dotFormatDiagram()
