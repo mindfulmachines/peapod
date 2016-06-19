@@ -31,6 +31,7 @@ object TaskTest {
     def generate = 1
   }
 }
+
 class TaskTest  extends FunSuite {
   test("testRecursiveVersion") {
     val p1 = PeapodGenerator.peapod()
@@ -67,6 +68,7 @@ class TaskTest  extends FunSuite {
     assert(t2.metadata() == "TaskB:1\n-TaskA:2")
   }
 
+  //noinspection ComparingUnrelatedTypes
   test("testEquality") {
     implicit val p1 = PeapodGenerator.peapod()
     val t1 = new TaskB1()
