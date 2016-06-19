@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import org.apache.hadoop.fs.Path
-import peapod.Peapod
+import peapod.{Peapod, ShutdownHookManager}
 
 import scala.util.Random
 
