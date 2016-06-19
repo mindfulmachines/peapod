@@ -1,12 +1,18 @@
 package peapod
 
+import java.io.{BufferedReader, File, InputStreamReader}
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
+
 import generic.PeapodGenerator
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.scalatest.{FunSpec, FunSuite}
 import peapod.StorableTaskTest._
 import StorableTask._
+import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.DoubleWritable
+import collection.JavaConverters._
 
 case class Single (value: Double)
 
@@ -73,7 +79,7 @@ object StorableTaskTest {
   }
 }
 class StorableTaskTest extends FunSuite {
-  test("testRecursiveVersion") {
+  test("Recursive Version") {
     val p1 = PeapodGenerator.peapod()
     val p2 = PeapodGenerator.peapod()
     val t1 = new TaskB1()(p1)
@@ -86,7 +92,7 @@ class StorableTaskTest extends FunSuite {
     assert(t2.dir.endsWith("TaskB/eSbl8xEbNGEvh7iKBnDChg"))
   }
 
-  test("testRecursiveVersionLatest") {
+  test("Recursive Version Latest") {
     val p1 = PeapodGenerator.peapodNonRecursive()
     val p2 = PeapodGenerator.peapodNonRecursive()
     val t1 = new TaskB1()(p1)
@@ -99,12 +105,35 @@ class StorableTaskTest extends FunSuite {
     assert(t2.dir.endsWith("TaskB/latest"))
   }
 
-  test("testStorage") {
+
+  test("SUCCESS file") {
     implicit val p = PeapodGenerator.peapod()
     val task = new TaskDouble()
-    val pea = p(task)
+    task.build()
+    val path = new Path(task.dir + "/_SUCCESS")
+    val fs = path.getFileSystem(p.sc.hadoopConfiguration)
+    assert(fs.exists(path))
+
+  }
+
+  test("Metadata file") {
+    implicit val p = PeapodGenerator.peapod()
+    val task = new TaskDouble()
+    task.build()
+    val path = new Path(task.dir + "/_peapod_metadata")
+    val fs = path.getFileSystem(p.sc.hadoopConfiguration)
+    assert(fs.exists(path))
+    val br=new BufferedReader(new InputStreamReader(fs.open(path)))
+    val meta = Stream.continually(br.readLine()).takeWhile(_ != null).mkString("\n")
+    assert(meta == task.metadata())
+    fs.close()
+  }
+
+  test("Storage") {
+    implicit val p = PeapodGenerator.peapod()
+    val task = new TaskDouble()
     assert(!task.exists())
-    pea.get()
+    task.build()
     assert(task.exists())
     task.delete()
     assert(!task.exists())
@@ -115,49 +144,49 @@ class StorableTaskTest extends FunSuite {
     assert(task.load() == 1.0)
   }
 
-  test("testStorageLongTerm") {
+  test("StorageLongTerm") {
     implicit val p = PeapodGenerator.peapod()
-    val pea = p(new TaskDouble())
-    assert(pea.get() == 1.0)
+    val t = new TaskDouble()
+    assert(t.build() == 1.0)
 
     val pNew = new Peapod(raw = p.raw, path = p.path)(p.sc)
     assert(new TaskDouble()(pNew).load() == 1.0)
 
   }
 
-  test("testDouble") {
+  test("Double") {
     implicit val p = PeapodGenerator.peapod()
-    val pea = new Pea(new TaskDouble())
-    assert(pea() == 1.0)
+    val t = new TaskDouble()
+    assert(t.build() == 1.0)
   }
 
-  test("testRDD") {
+  test("RDD") {
     implicit val p = PeapodGenerator.peapod()
-    val pea = new Pea(new TaskRDD())
-    assert(pea().collect().toList == 1.0 :: 2.0 :: Nil)
+    val t = new TaskRDD()
+    assert(t.build().collect().toList == 1.0 :: 2.0 :: Nil)
   }
 
-  test("testDF") {
+  test("DF") {
     implicit val p = PeapodGenerator.peapod()
-    val pea = new Pea(new TaskDF())
-    assert(pea().collect().map(_.getAs[Double]("value")).toList == 1.0 :: 2.0 :: Nil)
+    val t = new TaskDF()
+    assert(t.build().collect().map(_.getAs[Double]("value")).toList == 1.0 :: 2.0 :: Nil)
   }
 
-  test("testDS") {
+  test("DS") {
     implicit val p = PeapodGenerator.peapod()
-    val pea = new Pea(new TaskDS())
-    assert(pea().collect().map(_.value).toList == 1.0 :: 2.0 :: Nil)
+    val t = new TaskDS()
+    assert(t.build().collect().map(_.value).toList == 1.0 :: 2.0 :: Nil)
   }
 
-  test("testSerializable") {
+  test("Serializable") {
     implicit val p = PeapodGenerator.peapod()
-    val pea = new Pea(new TaskSerializable())
-    assert(pea().value == 1.0)
+    val t = new TaskSerializable()
+    assert(t.build().value == 1.0)
   }
 
-  test("testWritable") {
+  test("Writable") {
     implicit val p = PeapodGenerator.peapod()
-    val pea = new Pea(new TaskWritable())
-    assert(pea().get() == 1.0)
+    val t = new TaskWritable()
+    assert(t.build().get() == 1.0)
   }
 }

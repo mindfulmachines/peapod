@@ -1,6 +1,6 @@
 package peapod
 
-import java.io.{ByteArrayOutputStream, IOException, ObjectInputStream, ObjectOutputStream}
+import java.io._
 import java.net.URI
 
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -227,6 +227,7 @@ abstract class StorableTaskBase[V : ClassTag]
   def build(): V = {
     write(generate)
     writeSuccess()
+    writeMetaData()
     read()
   }
   def load(): V = {
@@ -242,10 +243,22 @@ abstract class StorableTaskBase[V : ClassTag]
     filesystem.createNewFile(new Path(dir + "/_SUCCESS"))
     filesystem.close()
   }
+
+  private def writeMetaData(): Unit = {
+    val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
+    val fo = filesystem.create(new Path(dir + "/_peapod_metadata"))
+    val br=new BufferedWriter(new OutputStreamWriter(fo))
+    br.write(metadata())
+    br.close()
+    fo.close()
+    filesystem.close()
+  }
+
   def delete() {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     fs.delete(new Path(dir), true)
   }
+
   def exists(): Boolean = {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     val path = new Path(dir + "/_SUCCESS")
