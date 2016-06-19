@@ -14,14 +14,17 @@ class PeaTest  extends FunSuite {
   class TaskC(implicit val p: Peapod) extends EphemeralTask[Double]  {
     def generate = 1
   }
-  class TaskNever(implicit val p: Peapod) extends EphemeralTask[Double] with NeverCache {
+  class TaskNever(implicit val p: Peapod) extends EphemeralTask[Double]  {
+    override val cache = Never
     def generate = 1
   }
-  class TaskAlways(implicit val p: Peapod) extends EphemeralTask[Double] with AlwaysCache {
+  class TaskAlways(implicit val p: Peapod) extends EphemeralTask[Double] {
+    override val cache = Always
     def generate = 1
   }
 
-  class TaskDep(implicit val p: Peapod) extends EphemeralTask[Double] with AlwaysCache {
+  class TaskDep(implicit val p: Peapod) extends EphemeralTask[Double] {
+    override val cache = Always
     val c = pea(new TaskA)
     def generate = c.toDouble
   }

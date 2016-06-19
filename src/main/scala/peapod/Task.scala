@@ -34,6 +34,11 @@ abstract class Task [+T: ClassTag] {
   val storable: Boolean
 
   /**
+    * Determined how this Task will be cached in memory
+    */
+  val cache: Cache = Auto
+
+  /**
     * The version of this Task, any changes to a Task's logic should have a corresponding version change
     */
   val version: String = "1"
