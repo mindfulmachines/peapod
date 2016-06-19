@@ -15,16 +15,13 @@
  * limitations under the License.
  */
 
-package generic
+package peapod
 
 import java.io.File
 import java.util.PriorityQueue
 
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.fs.FileSystem
-
-import scala.util.Try
-import peapod.Logging
 
 
 /**
