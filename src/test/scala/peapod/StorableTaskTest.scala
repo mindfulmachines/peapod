@@ -19,27 +19,27 @@ case class Single (value: Double)
 object StorableTaskTest {
 
   class TaskA1(implicit val p: Peapod) extends StorableTask[Double]  {
-    override lazy val name = "TaskA"
+    override lazy val baseName = "TaskA"
     override val version = "1"
     override val description = "Return 1 Always"
     def generate = 1
   }
 
   class TaskA2(implicit val p: Peapod) extends StorableTask[Double]  {
-    override lazy val name = "TaskA"
+    override lazy val baseName = "TaskA"
     override val version = "2"
     def generate = 1
   }
 
   class TaskB1(implicit val p: Peapod) extends StorableTask[Double]  {
-    override lazy val name = "TaskB"
+    override lazy val baseName = "TaskB"
     override val description = "Return 1 Always"
     pea(new TaskA1())
     def generate = 1
   }
 
   class TaskB2(implicit val p: Peapod) extends StorableTask[Double]  {
-    override lazy val name = "TaskB"
+    override lazy val baseName = "TaskB"
     pea(new TaskA2())
     def generate = 1
   }
@@ -79,6 +79,20 @@ object StorableTaskTest {
   }
 }
 class StorableTaskTest extends FunSuite {
+  test("Delete Old Version") {
+    val p1 = PeapodGenerator.peapod()
+    val t1 = new TaskB1()(p1)
+    val t2 = new TaskB2()(p1)
+    t1.build()
+    t2.build()
+    assert(t1.exists())
+    assert(t2.exists())
+    t2.deleteOtherVersions()
+    assert(!t1.exists())
+    assert(t2.exists())
+  }
+
+
   test("Recursive Version") {
     val p1 = PeapodGenerator.peapod()
     val p2 = PeapodGenerator.peapod()

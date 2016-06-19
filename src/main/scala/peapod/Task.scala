@@ -44,15 +44,29 @@ abstract class Task [+T: ClassTag] {
   var children: List[Task[_]] = Nil
 
   /**
+    * The directory where this Task's main directory would be stored to disk if it is to be stored to disk. This is the
+    * directory without the version or other subdirectories attached to it but merely the task itself. This is located
+    * here rather than in StorableTask to allow traits to better override it
+    */
+  lazy val baseDir = p.path + "/" + baseName
+
+  /**
     * The directory where this Task would be stored to disk if it is to be stored to disk. This is located here rather
     * than in StorableTask to allow traits to better override it
     */
-  lazy val dir =
+  lazy val dir = p.path + "/" + baseName + "/" + storageRecursiveVersion()
+
+  /**
+    * The recursive version that is used for storage to disk, it is the recursiveVersionShort unless recursive
+    * versioning is disabled in which case it is "latest"
+    */
+  protected def storageRecursiveVersion() = {
     if(p.recursiveVersioning) {
-      p.path + "/" + name + "/" + recursiveVersionShort
+      recursiveVersionShort
     } else {
-      p.path + "/" + name + "/" + "latest"
+      "latest"
     }
+  }
 
   /**
     * Generates the output of this Task, potentially saving it to persistent storage in the process
@@ -75,6 +89,12 @@ abstract class Task [+T: ClassTag] {
     * than throwing an error
     */
   def delete()
+
+  /**
+    * Remove the output of this Task from persistent storage if the recursive version differs from the current version,
+    * if there is no output then this should be a no-op rather than throwing an error
+    */
+  def deleteOtherVersions()
 
   /**
     * Loads the output of this task from persistent storage if possible, may throw an exception if the output does

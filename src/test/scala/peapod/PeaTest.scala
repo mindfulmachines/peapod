@@ -116,6 +116,7 @@ class PeaTest  extends FunSuite {
     val peaB = new Pea(new TaskB())
     assert(peaA == peaA)
     assert(peaA != peaB)
+    //noinspection ComparingUnrelatedTypes
     assert(peaA != "")
   }
 }

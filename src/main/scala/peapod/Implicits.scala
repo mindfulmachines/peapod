@@ -2,6 +2,7 @@ package peapod
 
 import com.typesafe.config.{Config, ConfigValueFactory}
 
+import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 /**

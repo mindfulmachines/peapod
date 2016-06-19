@@ -11,6 +11,8 @@ import org.apache.spark.sql.{DataFrame, Dataset}
 
 import scala.reflect.{ClassTag, _}
 import scala.reflect.runtime.universe._
+import collection.JavaConverters._
+import scala.language.implicitConversions
 
 /**
   * Helper object that provides methods and classes for allowing various objects to be automatically saved by the
@@ -257,6 +259,17 @@ abstract class StorableTaskBase[V : ClassTag]
   def delete() {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     fs.delete(new Path(dir), true)
+  }
+
+  def deleteOtherVersions() {
+    val fs = FileSystem.get(new URI(baseDir), p.sc.hadoopConfiguration)
+    val path = new Path(dir)
+    val files = fs.listStatus(new Path(baseDir))
+    files
+      .filter(_.isDirectory)
+      .filter(! _.getPath.equals(path) )
+      .foreach(f => fs.delete(f.getPath, true))
+
   }
 
   def exists(): Boolean = {

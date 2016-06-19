@@ -27,6 +27,11 @@ abstract class EphemeralTask[V: ClassTag]
   def delete() {}
 
   /**
+    * Does nothing for EphemeralTasks
+    */
+  def deleteOtherVersions() {}
+
+  /**
     * Generates the output for EphemeralTasks
     */
   def load(): V = {build()}

@@ -6,24 +6,24 @@ import peapod.TaskTest.{TaskA1, TaskB1, TaskB2, TaskC}
 
 object TaskTest {
   class TaskA1(implicit val p: Peapod) extends EphemeralTask[Double]  {
-    override lazy val name = "TaskA"
+    override lazy val baseName = "TaskA"
     override val version = "1"
     override val description = "Return 1 Always"
     def generate = 1
   }
   class TaskA2(implicit val p: Peapod) extends EphemeralTask[Double]  {
-    override lazy val name = "TaskA"
+    override lazy val baseName = "TaskA"
     override val version = "2"
     def generate = 1
   }
   class TaskB1(implicit val p: Peapod) extends EphemeralTask[Double]  {
-    override lazy val name = "TaskB"
+    override lazy val baseName = "TaskB"
     override val description = "Return 1 Always"
     pea(new TaskA1())
     def generate = 1
   }
   class TaskB2(implicit val p: Peapod) extends EphemeralTask[Double]  {
-    override lazy val name = "TaskB"
+    override lazy val baseName = "TaskB"
     pea(new TaskA2())
     def generate = 1
   }
