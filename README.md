@@ -24,7 +24,7 @@ import peapod.{Peapod, StorableTask}
 import peapod.StorableTask._
 class RawPages(implicit val p: Peapod) extends StorableTask[RDD[(Long, String)]] {
   def generate =
-    readWikiDump(p.sc, p.fs + p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
+    readWikiDump(p.sc, p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
 }
 ```
 Then you can create other tasks which depend on this task. You use the pea() method to wrap a task to have it be a dependency of the current task. You can then use the get() method of the dependency to access the output of the dependencies generate method. The outputs are cached so even if you create multiple instances of a Task (within a single Peapod, we'll get to that in a bit) their get methods will all point to the same data.
@@ -56,7 +56,7 @@ import peapod.StorableTask._
 class RawPages(implicit val p: Peapod) extends StorableTask[RDD[(Long, String)]] {
   override val version = "2"
   def generate =
-    readWikiDump(p.sc, p.fs + p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
+    readWikiDump(p.sc, p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
 }
 p(new ParsedPages()).get().count()
 ```
@@ -68,27 +68,50 @@ In progress.
 ## Ephemeral Task
 This is a Task which never saves or loads it's state from disk but always runs the generate method. This is useful for quick Tasks or Tasks which only run for a short period of time.
 ```scala
-import peapod.StorableTask._
 class RawPages(implicit val p: Peapod) extends EphemeralTask[RDD[(Long, String)]] {
   def generate =
-    readWikiDump(p.sc, p.fs + p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
+    readWikiDump(p.sc, p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
 }
 ```
+
+## Storable Task
+This is a Task which saves or loads it's state (the output of generate) from disk. You need to run `import peapod.StorableTask._` first to ensure that the implicit conversions for serialization are imported.
+```scala
+import peapod.StorableTask._
+class RawPages(implicit val p: Peapod) extends StorableTask[RDD[(Long, String)]] {
+  def generate =
+    readWikiDump(p.sc, p.raw + "/enwiki-20150304-pages-articles.xml.bz2")
+}
+```
+
+## Caching/Persisting
+The Peapod framework will in some cases automatically run Spark's persist methods on the output of tasks (for RDD, DataFrame and Dataset outputs) and so cache them. This is currently done if a task is ephemeral or if it has more than two tasks which depend on it. Once the number of dependent tasks that have not been already generated is zero the task will be automatically unpersisted. It's also possible to manually control the persistence using the cache variable in a Task:
+```scala
+class RawPages(implicit val p: Peapod) extends EphemeralTask[RDD[(Long, String)]] {
+  //The default is Auto
+  override val persist = Auto
+  //Never persists this task's output:
+  //override val persist = Never
+  //Always persist this task's output:
+  //override val persist = Always
+}
+```
+
 
 ## Dot Graphs
 There is support for outputting the dependency tree into a [Dot format](https://en.wikipedia.org/wiki/DOT_(graph_description_language)). Dotted boxes indicate EphemeralTasks and filled in boxes indicate tasks that already are stored on disk.
 ```scala
 new Test.AUC()
-println(peapod.dotFormatDiagram())
+println(p.dotFormatDiagram())
 ```
-You can either use a tool such as [Graphiz](http://www.graphviz.org/) or a service such as [Gravizo](http://gravizo.com) to convert the Dot file into an image.
+You can either use a tool such as [Graphiz](http://www.graphviz.org/) or a service such as [Gravizo](http://gravizo.com) to convert the Dot file into an image. We also provide our own service that accepts compressed representations of the Dot Diagram which allows for larger DAGs to be displayed.
 ```scala
-println("http://g.gravizo.com/g?" +
-  new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20"))
+println(Util.gravizoDotLink(p.dotFormatDiagram()))
+println(Util.mindfulmachinesDotLink(p.dotFormatDiagram()))
 ```
 In Spark Notebook you can simply create an XML literal for this:
 ```scala
-<img src={"http://g.gravizo.com/g?" +new URLCodec().encode(w.dotFormatDiagram()).replace("+","%20") }/>
+<img src={Util.gravizoDotLink(p.dotFormatDiagram())}/>
 ```
 ![Gravizo Dot Graphic](http://g.gravizo.com/g?digraph%20G%20%7Bnode%20%5Bshape%3Dbox%5D%22dependency.Test%24Parsed%22%20%5Bstyle%3Dfilled%5D%3B%0A%22dependency.Test%24Raw%22%20%5Bstyle%3Dfilled%5D%3B%0A%22dependency.Test%24PipelineFeature%22%20%5Bstyle%3Dfilled%5D%3B%22dependency.Test%24ParsedEphemeral%22%20%5Bstyle%3Ddotted%5D%3B%22dependency.Test%24Parsed%22-%3E%22dependency.Test%24PipelineFeature%22%3B%0A%22dependency.Test%24Raw%22-%3E%22dependency.Test%24ParsedEphemeral%22%3B%0A%22dependency.Test%24Parsed%22-%3E%22dependency.Test%24AUC%22%3B%0A%22dependency.Test%24PipelineFeature%22-%3E%22dependency.Test%24AUC%22%3B%0A%22dependency.Test%24PipelineLR%22-%3E%22dependency.Test%24AUC%22%3B%0A%22dependency.Test%24Parsed%22-%3E%22dependency.Test%24PipelineLR%22%3B%0A%22dependency.Test%24PipelineFeature%22-%3E%22dependency.Test%24PipelineLR%22%3B%0A%22dependency.Test%24Raw%22-%3E%22dependency.Test%24Parsed%22%3B%7B%20rank%3Dsame%3B%22dependency.Test%24ParsedEphemeral%22%20%22dependency.Test%24AUC%22%20%22dependency.Test%24AUC%22%20%22dependency.Test%24AUC%22%7D%7B%20rank%3Dsame%3B%22dependency.Test%24Raw%22%20%22dependency.Test%24Raw%22%7D%7D)
 
