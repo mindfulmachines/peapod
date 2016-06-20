@@ -95,7 +95,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
         }
         val d = {
           val built = build()
-          task.cache match {
+          task.persist match {
             case Auto =>
               if (parents.size > 1 || ! task.storable  ) {
                 persist(built)
@@ -108,7 +108,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
         }
         Some(d)
       case Some(c) =>
-        task.cache match {
+        task.persist match {
           case Auto =>
             if (parents.size > 1 || ! task.storable  ) {
               Some(persist(c))
@@ -167,7 +167,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
     cache = cache match {
       case None => None
       case Some(c) =>
-        task.cache match {
+        task.persist match {
           case Auto =>
             if (parents.isEmpty) {
               Some(unpersist(c))
