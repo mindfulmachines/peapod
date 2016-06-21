@@ -10,6 +10,17 @@ import org.apache.spark.sql.SQLContext
 import scala.reflect.ClassTag
 import collection.JavaConversions._
 
+/**
+  * Main access point for Peapod functionality, all Tasks and Peas must belong to a Peapod instance which manages them.
+  * This allows for the same Tasks to exist multiple times within a single JVM rather than requiring only a single
+  * different copy of a Task or Pea per JVM.
+  *
+  * @param path The path where Peapod stored internal outputs such as from StorableTask, should be in Hadoop format
+  *             (ie: "file://", "hdfs://", etc.)
+  * @param raw The path for input files not managed by Peapod, should be in Hadoop format (ie: "file://", "hdfs://", etc.)
+  * @param conf An optional set of configuration parameters for this Peapod object
+  * @param _sc A SparkContext
+  */
 class Peapod( val path: String,
               val raw: String,
               val conf: Config = ConfigFactory.empty())(_sc : => SparkContext) {

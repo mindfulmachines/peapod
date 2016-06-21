@@ -294,7 +294,13 @@ abstract class StorableTaskBase[V : ClassTag]
 /**
   * A base Task class which store's it's output to disk automatically based on the Peapod's path variable. It uses
   * implicits from the StorableTask object for automatically allowing output objects to be serialized based on their
-  * type.
+  * type. Currently it support the following for serialization:
+  *  * RDD
+  *  * DataFrame
+  *  * Dataset
+  *  * Serializable
+  *  * Writable
+  *  * Double
   */
 abstract class StorableTask[V : ClassTag](implicit c: V => Storable[V])
   extends StorableTaskBase[V] {
