@@ -45,7 +45,19 @@ object StorableTaskTest {
   }
 
   class TaskDouble(implicit val p: Peapod) extends StorableTask[Double] {
+    def generate = 1.0
+  }
+
+  class TaskInt(implicit val p: Peapod) extends StorableTask[Int] {
     def generate = 1
+  }
+
+  class TaskLong(implicit val p: Peapod) extends StorableTask[Long] {
+    def generate = 1l
+  }
+
+  class TaskBoolean(implicit val p: Peapod) extends StorableTask[Boolean] {
+    def generate = true
   }
 
   class TaskRDD(implicit val p: Peapod) extends StorableTask[RDD[Double]] {
@@ -172,6 +184,24 @@ class StorableTaskTest extends FunSuite {
     implicit val p = PeapodGenerator.peapod()
     val t = new TaskDouble()
     assert(t.build() == 1.0)
+  }
+
+  test("Int") {
+    implicit val p = PeapodGenerator.peapod()
+    val t = new TaskInt()
+    assert(t.build() == 1)
+  }
+
+  test("Long") {
+    implicit val p = PeapodGenerator.peapod()
+    val t = new TaskLong()
+    assert(t.build() == 1l)
+  }
+
+  test("Boolean") {
+    implicit val p = PeapodGenerator.peapod()
+    val t = new TaskBoolean()
+    assert(t.build())
   }
 
   test("RDD") {
