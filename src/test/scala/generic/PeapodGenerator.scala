@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import org.apache.hadoop.fs.Path
-import peapod.{Peapod, ShutdownHookManager}
+import peapod.{Peapod, ShutdownHookManager, Web}
 
 import scala.util.Random
 
@@ -36,6 +36,13 @@ object PeapodGenerator {
       raw="")(generic.Spark.sc) {
       override val recursiveVersioning = false
     }
+    w
+  }
+  def web() = {
+    val path = createTempDir()
+    val w = new Peapod(
+      path= new Path("file://",path.replace("\\","/")).toString,
+      raw="")(generic.Spark.sc) with Web
     w
   }
 }

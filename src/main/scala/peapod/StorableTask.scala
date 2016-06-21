@@ -205,6 +205,21 @@ object StorableTask {
     */
   implicit def doubleToStorable(s: Double): Storable[Double] =
     new WritableConvertedStorable[Double, DoubleWritable](s, new DoubleWritable(_), _.get())
+  /**
+    * Wraps a Int into a Storable
+    */
+  implicit def intToStorable(s: Int): Storable[Int] =
+    new WritableConvertedStorable[Int ,IntWritable](s, new IntWritable(_), _.get())
+  /**
+    * Wraps a Long into a Storable
+    */
+  implicit def longToStorable(s: Long): Storable[Long] =
+    new WritableConvertedStorable[Long, LongWritable](s, new LongWritable(_), _.get())
+  /**
+    * Wraps a Boolean into a Storable
+    */
+  implicit def booleanToStorable(s: Boolean): Storable[Boolean] =
+    new WritableConvertedStorable[Boolean, BooleanWritable](s, new BooleanWritable(_), _.get())
 
 }
 
@@ -220,6 +235,9 @@ trait Storable[V] {
   * A base Task class which store's it's output to disk automatically based on the Peapod's path variable. It does not
   * use implicits for automatic type serialization and so must have the write and read methods specified manually in
   * extending classes.
+  *
+  * Custom serialization implementations would extend StorableTaskBase rather than StorableTask. Alternatively they can
+  * also define their own implicit conversion for StorableTask.
   */
 abstract class StorableTaskBase[V : ClassTag]
   extends Task[V] with Logging  {
@@ -294,7 +312,16 @@ abstract class StorableTaskBase[V : ClassTag]
 /**
   * A base Task class which store's it's output to disk automatically based on the Peapod's path variable. It uses
   * implicits from the StorableTask object for automatically allowing output objects to be serialized based on their
-  * type.
+  * type. Currently it support the following for serialization:
+  *  * RDD
+  *  * DataFrame
+  *  * Dataset
+  *  * Serializable
+  *  * Writable
+  *  * Double
+  *  * Int
+  *  * Long
+  *  * Boolean
   */
 abstract class StorableTask[V : ClassTag](implicit c: V => Storable[V])
   extends StorableTaskBase[V] {
