@@ -235,6 +235,9 @@ trait Storable[V] {
   * A base Task class which store's it's output to disk automatically based on the Peapod's path variable. It does not
   * use implicits for automatic type serialization and so must have the write and read methods specified manually in
   * extending classes.
+  *
+  * Custom serialization implementations would extend StorableTaskBase rather than StorableTask. Alternatively they can
+  * also define their own implicit conversion for StorableTask.
   */
 abstract class StorableTaskBase[V : ClassTag]
   extends Task[V] with Logging  {
