@@ -55,7 +55,7 @@
     </distributionManagement>
 
     <properties>
-        <scala-library.version>2.11.7</scala-library.version>
+        <scala.version>2.11.7</scala.version>
         <spark.version>1.6.1</spark.version>
         <hadoop-client.version>2.7.2</hadoop-client.version>
         <typesafe-config.version>1.3.0</typesafe-config.version>
@@ -67,8 +67,14 @@
     <dependencies>
         <dependency>
             <groupId>org.scala-lang</groupId>
+            <artifactId>scala-compiler</artifactId>
+            <version>${scala.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>${scala-library.version}</version>
+            <version>${scala.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
