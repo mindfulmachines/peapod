@@ -64,5 +64,5 @@ crashlytics.properties
 crashlytics-build.properties
 
 # Created by .ignore support plugin (hsz.mobi)
-project/
-spark-warehouse/
+project/project
+project/target
