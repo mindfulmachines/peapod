@@ -2,8 +2,9 @@ import sbt._
 
 lazy val commonSettings = Seq(
   organization := "io.mindfulmachines",
-  version := "0.7-SNAPSHOT",
-  scalaVersion := "2.11.8"
+  version := "0.8",
+  scalaVersion := "2.11.8",
+  description := "Dependency and data pipeline management framework for Spark and Scala."
 )
 
 crossScalaVersions := Seq("2.10.6", "2.11.8")
@@ -40,7 +41,6 @@ publishTo := {
 sonatypeProfileName := "io.mindfulmachines"
 
 pomExtra :=
-  <description>Dependency and data pipeline management framework for Spark and Scala.</description>
   <url>https://github.com/mindfulmachines/peapod</url>
   <licenses>
     <license>
