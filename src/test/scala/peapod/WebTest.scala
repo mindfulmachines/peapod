@@ -1,7 +1,6 @@
 package peapod
 
-import generic.{PeapodGenerator, Spark}
-import org.apache.hadoop.io.compress.{CompressionCodec, SnappyCodec}
+import generic.PeapodGenerator
 import org.scalatest.FunSuite
 
 class WebTest extends FunSuite {
