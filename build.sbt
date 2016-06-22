@@ -6,7 +6,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.8"
 )
 
-crossScalaVersions := Seq("2.10.4", "2.11.8")
+crossScalaVersions := Seq("2.10.6", "2.11.8")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.1" % "provided" exclude("org.apache.hadoop", "hadoop-client")
