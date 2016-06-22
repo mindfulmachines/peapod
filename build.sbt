@@ -25,6 +25,10 @@ pomIncludeRepository := { _ => false }
 
 publishMavenStyle := true
 
+fork in Test := true
+
+javaOptions in Test ++= Seq("-Xmx1G")
+
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
