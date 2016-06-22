@@ -1,18 +1,15 @@
 package peapod
 
-import java.io.{BufferedReader, File, InputStreamReader}
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
+import java.io.{BufferedReader, InputStreamReader}
 
 import generic.PeapodGenerator
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Dataset}
-import org.scalatest.{FunSpec, FunSuite}
-import peapod.StorableTaskTest._
-import StorableTask._
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.DoubleWritable
-import collection.JavaConverters._
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, Dataset}
+import org.scalatest.FunSuite
+import peapod.StorableTask._
+import peapod.StorableTaskTest._
 
 case class Single (value: Double)
 

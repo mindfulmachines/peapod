@@ -1,26 +1,15 @@
 package peapod
 
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-
 import com.google.common.io.Resources
-import org.apache.commons.codec.binary.Base64
-import org.apache.commons.codec.net.URLCodec
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{HashingTF, StopWordsRemover, Tokenizer}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
-import org.joda.time.LocalDate
 import org.scalatest.FunSuite
 import StorableTask._
-import Pea._
 import generic.PeapodGenerator
-import org.apache.hadoop.fs.Path
-
-import scala.util.Random
 
 object PeapodWorkflowTest {
   var runs = 0

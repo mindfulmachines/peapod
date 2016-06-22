@@ -1,6 +1,6 @@
 package peapod
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import org.scalatest.FunSuite
 
 class ImplicitsTest extends FunSuite{
