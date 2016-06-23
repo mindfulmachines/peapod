@@ -97,6 +97,36 @@ class RawPages(implicit val p: Peapod) extends EphemeralTask[RDD[(Long, String)]
 }
 ```
 
+## Parametrization
+There are times when you want Tasks to take in parameters in real time as part of their constructor. This can allow for clean custom pipelines without global state or for things like iterative computation and loops. For this to work cleanly with Peapod, however, you would need to have the name of the Task take the parameter into account. Doing this manually is possible but tedious so the functionality is now built into Peapod.
+
+To achieve this you first need to define your parameters as traits with the parameter as a variable and use the `param()` method to register it.
+```scala
+trait ParamA extends Param {
+  val a: String
+  param(a)
+}
+trait ParamB extends Param {
+  val b: String
+  param(b)
+}
+```
+Then you simply have your Tasks inherit the traits and define the parameters in the constructor:
+
+```scala
+class Test(val a: String, val b: String)(implicit val p: Peapod)
+  extends EphemeralTask[Double] with ParamA with ParamB {
+  def generate = 1
+}
+```
+
+The name of the resulting task is automatically updated based on the parameters:
+```scala
+new Test("a","b").name
+//"peapod.ParamTest$Test_98_97"
+new Test("a","a").name
+//"peapod.ParamTest$Test_97_97"
+```
 
 ## Dot Graphs
 There is support for outputting the dependency tree into a [Dot format](https://en.wikipedia.org/wiki/DOT_(graph_description_language)). Dotted boxes indicate EphemeralTasks and filled in boxes indicate tasks that already are stored on disk.
@@ -115,6 +145,17 @@ In Spark Notebook you can simply create an XML literal for this:
 ```
 ![Gravizo Dot Graphic](http://g.gravizo.com/g?digraph%20G%20%7Bnode%20%5Bshape%3Dbox%5D%22dependency.Test%24Parsed%22%20%5Bstyle%3Dfilled%5D%3B%0A%22dependency.Test%24Raw%22%20%5Bstyle%3Dfilled%5D%3B%0A%22dependency.Test%24PipelineFeature%22%20%5Bstyle%3Dfilled%5D%3B%22dependency.Test%24ParsedEphemeral%22%20%5Bstyle%3Ddotted%5D%3B%22dependency.Test%24Parsed%22-%3E%22dependency.Test%24PipelineFeature%22%3B%0A%22dependency.Test%24Raw%22-%3E%22dependency.Test%24ParsedEphemeral%22%3B%0A%22dependency.Test%24Parsed%22-%3E%22dependency.Test%24AUC%22%3B%0A%22dependency.Test%24PipelineFeature%22-%3E%22dependency.Test%24AUC%22%3B%0A%22dependency.Test%24PipelineLR%22-%3E%22dependency.Test%24AUC%22%3B%0A%22dependency.Test%24Parsed%22-%3E%22dependency.Test%24PipelineLR%22%3B%0A%22dependency.Test%24PipelineFeature%22-%3E%22dependency.Test%24PipelineLR%22%3B%0A%22dependency.Test%24Raw%22-%3E%22dependency.Test%24Parsed%22%3B%7B%20rank%3Dsame%3B%22dependency.Test%24ParsedEphemeral%22%20%22dependency.Test%24AUC%22%20%22dependency.Test%24AUC%22%20%22dependency.Test%24AUC%22%7D%7B%20rank%3Dsame%3B%22dependency.Test%24Raw%22%20%22dependency.Test%24Raw%22%7D%7D)
 
+# Web Server (Experimental)
+The dot graphs while useful are limited in their flexibility by requiring an explicit generation from the Peapod instance. To allow for a better user experience an experimental web server which displays the DAG graph was added in Peapod 0.8.
+
+To use this you need to extend Peapod with the Web trait:
+```scala
+val p = new Peapod(
+  path= new Path("file://",path.replace("\\","/")).toString,
+  raw="")(sc) with Web
+```
+
+Then you can go to localhost:8080 to view the DAG graph in real time.
 
 # Known Issues
  * StorableTasks whose generate only performs a map operation on an RDD will not work if S3 is the storage location. You can get around this by running a repartition in the generate.
