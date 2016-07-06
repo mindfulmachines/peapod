@@ -56,7 +56,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
     }
   }
 
-  //todo should only happen after the children are removed
+
   private[peapod] def addParent(pea: Pea[_]) = parents.synchronized {
     parents = parents + pea
   }
@@ -86,7 +86,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
   /**
     * Generates the cache for this Pea, updating stale parents and children in the process and managing persistance
     */
-  //TODO: Remove auto-persisting of ephemeral tasks, instead keep track recursivelly of child tasks that need to be un-persisted
+
   protected def buildCache(): Unit = {
     cache = cache match {
       case None =>
@@ -99,7 +99,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
           val built = build()
           task.persist match {
             case Auto =>
-              if (children.size > 1 || ! task.storable  ) {
+              if (children.size > 1) {
                 persist(built)
               } else {
                 built
@@ -112,7 +112,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
       case Some(c) =>
         task.persist match {
           case Auto =>
-            if (children.size > 1 || ! task.storable  ) {
+            if (children.size > 1) {
               Some(persist(c))
             } else {
               Some(c)
@@ -121,9 +121,12 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
           case Never => Some(c)
         }
     }
-    parents.foreach(c => c.removeChild(this))
-    parents.foreach(c => c.unpersist())
+
+
+    parents.foreach(p => p.removeChild(this))
+    parents.foreach(p => p.unpersist())
     parents = parents.empty
+
   }
 
   /**

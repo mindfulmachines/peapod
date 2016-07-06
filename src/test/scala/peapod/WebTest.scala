@@ -19,8 +19,10 @@ class WebTest extends FunSuite {
 
   test("Web Server") {
     implicit val p = PeapodGenerator.web()
+    Thread.sleep(1000)
     p(new TaskC())
     assert(scala.io.Source.fromURL("http://localhost:8080").mkString.trim ==
-      "<img src=\"http://graphvizserver-env.elasticbeanstalk.com/?H4sIAAAAAAAAAEvJTC9KLMhQcFeozstPSVWILs5ILEi1TcqviK1WKErMy7YtTsxNta5F4dQCAD79o5Y2AAAA\"></img>")
+      "<img src=\"http://graphvizserver-env.elasticbeanstalk.com/?H4sIAAAAAAAAAEvJTC9KLMhQcFeozstPSVWILs5ILEi1TcqviFUqSE0syE_RC09NCkktLlEJSSzOdlICqiipzEm1TckvKUlNibXmwqbMmThljhjKsKvStcPuFlymYlfvjEO9E2711QpFiXnZtsWJualYnQb0J3bhWkI6HbHrdFSqrQUAc6ngZJMBAAA\"></img>"
+    )
   }
 }
