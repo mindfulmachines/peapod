@@ -2,7 +2,7 @@ import sbt._
 
 lazy val commonSettings = Seq(
   organization := "io.mindfulmachines",
-  version := "0.8",
+  version := "0.9-SNAPSHOT",
   scalaVersion := "2.11.8",
   description := "Dependency and data pipeline management framework for Spark and Scala."
 )

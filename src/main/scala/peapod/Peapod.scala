@@ -54,8 +54,8 @@ class Peapod( val path: String,
   protected def setLinkages(t: Task[_], p: Pea[_]): Unit = {
     //TODO: This is hacky, should be moved into the Pea and centralized in terms of the logic location
     if(! p.task.exists) {
-      t.children.foreach(c => generatePea(c).addParent(p))
-      t.children.foreach(c => p.addChild(generatePea(c)))
+      t.children.foreach(c => generatePea(c).addChild(p))
+      t.children.foreach(c => p.addParent(generatePea(c)))
     }
   }
 

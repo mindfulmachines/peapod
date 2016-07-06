@@ -29,25 +29,26 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
   /**
     * Peas which this Pea is dependent on
     */
-  var children: Set[Pea[_]] = new HashSet[Pea[_]]()
+  var parents: Set[Pea[_]] = new HashSet[Pea[_]]()
 
   /**
     * Peas which depend on this Pea
     */
-  var parents: Set[Pea[_]] = new HashSet[Pea[_]]()
+  var children: Set[Pea[_]] = new HashSet[Pea[_]]()
 
   /**
     * Store the output of the Task this Pea reperesents
     */
   var cache: Option[_] = None
 
-  private[peapod] def addParent(pea: Pea[_]) = parents.synchronized {
-    parents = parents + pea
+  private[peapod] def addChild(pea: Pea[_]) = children.synchronized {
+    children = children + pea
   }
 
-  private[peapod] def removeParent(pea: Pea[_]) = parents.synchronized {
-    parents = parents - pea
-    if(parents.isEmpty) {
+
+  private[peapod] def removeChild(pea: Pea[_]) = children.synchronized {
+    children = children - pea
+    if(children.isEmpty) {
       cache match {
         case Some(c) => //unpersist(c.asInstanceOf[D])
         case None =>
@@ -55,12 +56,13 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
     }
   }
 
-  private[peapod] def addChild(pea: Pea[_]) = children.synchronized {
-    children = children + pea
+  //todo should only happen after the children are removed
+  private[peapod] def addParent(pea: Pea[_]) = parents.synchronized {
+    parents = parents + pea
   }
 
-  private[peapod] def removeChild(pea: Pea[_]) = children.synchronized {
-    children = children - pea
+  private[peapod] def removeParent(pea: Pea[_]) = parents.synchronized {
+    parents = parents - pea
   }
 
   def apply(): D = get()
@@ -89,7 +91,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
     cache = cache match {
       case None =>
         if (!task.exists) {
-          val par = children.par
+          val par = parents.par
           par.tasksupport = Pea.tasksupport
           par.foreach(c => c.get())
         }
@@ -97,7 +99,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
           val built = build()
           task.persist match {
             case Auto =>
-              if (parents.size > 1 || ! task.storable  ) {
+              if (children.size > 1 || ! task.storable  ) {
                 persist(built)
               } else {
                 built
@@ -110,7 +112,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
       case Some(c) =>
         task.persist match {
           case Auto =>
-            if (parents.size > 1 || ! task.storable  ) {
+            if (children.size > 1 || ! task.storable  ) {
               Some(persist(c))
             } else {
               Some(c)
@@ -119,9 +121,9 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
           case Never => Some(c)
         }
     }
-    children.foreach(c => c.removeParent(this))
-    children.foreach(c => c.unpersist())
-    children = children.empty
+    parents.foreach(c => c.removeChild(this))
+    parents.foreach(c => c.unpersist())
+    parents = parents.empty
   }
 
   /**
@@ -169,7 +171,7 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
       case Some(c) =>
         task.persist match {
           case Auto =>
-            if (parents.isEmpty) {
+            if (children.isEmpty) {
               Some(unpersist(c))
             } else {
               Some(c)

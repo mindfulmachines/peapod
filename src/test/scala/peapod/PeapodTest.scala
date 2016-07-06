@@ -65,8 +65,8 @@ class PeapodTest  extends FunSuite {
     implicit val p = PeapodGenerator.peapod()
     val peaA = p(new TaskA())
     val peaB = p(new TaskB())
-    assert(peaA.parents == Set(peaB))
-    assert(peaB.children == Set(peaA))
+    assert(peaA.children == Set(peaB))
+    assert(peaB.parents == Set(peaA))
   }
 
   test("Size") {
