@@ -10,9 +10,9 @@ lazy val commonSettings = Seq(
 crossScalaVersions := Seq("2.10.6", "2.11.8")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
-libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.1" % "provided" exclude("org.apache.hadoop", "hadoop-client")
-libraryDependencies += "org.apache.spark" %% "spark-sql" % "1.6.1" % "provided"
-libraryDependencies += "org.apache.spark" %% "spark-mllib" % "1.6.1" % "provided"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.2" % "provided" exclude("org.apache.hadoop", "hadoop-client")
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "1.6.2" % "provided"
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % "1.6.2" % "provided"
 libraryDependencies += "org.apache.hadoop" % "hadoop-client" % "2.7.2" % "provided"  excludeAll ExclusionRule(organization = "javax.servlet")
 libraryDependencies += "org.eclipse.jetty" % "jetty-webapp" % "9.3.9.v20160517" % "provided"
 libraryDependencies += "net.java.dev.jets3t" % "jets3t" % "0.9.4" % "provided"
