@@ -19,6 +19,10 @@ trait Web {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val server = Future(new WebServer(this))
+
+  def stop() = {
+    server.map(_.server.stop())
+  }
 }
 
 class WebServer(p: Peapod, port: Int = 8080) {

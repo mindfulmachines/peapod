@@ -34,6 +34,7 @@ class WebTest extends FunSuite {
     assert(scala.io.Source.fromURL("http://localhost:8080/graph?active").mkString.trim ==
       """{"nodes":[{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"}]}"""
     )
+    p.stop()
 
   }
 }
