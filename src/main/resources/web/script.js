@@ -36,20 +36,23 @@ function tryDrawGraph(graph) {
     }
 
     // Create the renderer
-    var render = new dagreD3.render();
     // Set up an SVG group so that we can translate the final graph.
-    var svg = d3.select("svg"), 
-        inner = svg.append("g");
+    var svg = d3.select("svg");
+    var inner = d3.select("svg g");
 
-    // Set up zoom support
-    var zoom = d3.behavior.zoom().on("zoom", function() {
-        inner.attr("transform", "translate(" + d3.event.translate + ")" +
-            "scale(" + d3.event.scale + ")");
-    });
-    svg.call(zoom);
+    // Set margins, if not present
+    if (!g.graph().hasOwnProperty("marginx") &&
+        !g.graph().hasOwnProperty("marginy")) {
+        g.graph().marginx = 20;
+        g.graph().marginy = 20;
+    }
+
+    g.graph().transition = function(selection) {
+        return selection.transition().duration(500);
+    };
 
     // Run the renderer. This is what draws the final graph.
-    render(inner, g);
+    inner.call(render, g);
     // Center the graph
     //var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
     //inner.attr("transform", "translate(" + xCenterOffset + ", 20)");
