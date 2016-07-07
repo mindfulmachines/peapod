@@ -18,6 +18,8 @@ libraryDependencies += "org.eclipse.jetty" % "jetty-webapp" % "9.3.9.v20160517" 
 libraryDependencies += "net.java.dev.jets3t" % "jets3t" % "0.9.4" % "provided"
 libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.12.0"
 libraryDependencies += "com.typesafe" % "config" % "1.3.0"
+libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.7.4" % "provided"
+libraryDependencies += "org.apache.hadoop" % "hadoop-aws" % "2.7.2" % "provided"
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/"
@@ -69,6 +71,8 @@ pomExtra :=
   </scm>
 
 lazy val root = (project in file(".")).
+  configs(IntegrationTest).
+  settings(Defaults.itSettings: _*).
   settings(commonSettings: _*).
   settings(
     name := "Peapod"
