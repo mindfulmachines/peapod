@@ -1,8 +1,9 @@
 package peapod
+
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import org.eclipse.jetty.server.{Request, Server}
-import org.eclipse.jetty.server.handler.AbstractHandler
+import org.eclipse.jetty.server.{Handler, Request, Server}
+import org.eclipse.jetty.server.handler.{AbstractHandler, ContextHandler, ContextHandlerCollection, ResourceHandler}
 
 import scala.concurrent.Future
 
@@ -12,15 +13,32 @@ import scala.concurrent.Future
   * the graph itself so the web browser needs web access for this to function. In the future this will be converted to
   * use D3 to generate the graph rather than the Graphiz based implementation that exists currently.
   */
-trait Web{
+trait Web {
   self: Peapod =>
+
   import scala.concurrent.ExecutionContext.Implicits.global
+
   val server = Future(new WebServer(this))
 }
 
-class WebServer(p: Peapod, port: Int= 8080) {
+class WebServer(p: Peapod, port: Int = 8080) {
   val server = new Server(port)
-  server.setHandler(new WebHandler(p))
+
+  val resource_handler = new ResourceHandler()
+  val url = this.getClass.getClassLoader.getResource("web")
+  resource_handler.setResourceBase(url.toString)
+
+  val contextWeb = new ContextHandler("/")
+  contextWeb.setHandler(resource_handler)
+
+
+  val context = new ContextHandler("/graph")
+  context.setHandler(new WebHandler(p))
+
+  val contexts = new ContextHandlerCollection()
+  contexts.setHandlers(Array(contextWeb, context))
+
+  server.setHandler(contexts)
   server.start()
   server.join()
 }
@@ -32,8 +50,13 @@ class WebHandler(p: Peapod) extends AbstractHandler {
     httpServletResponse.setContentType("text/html;charset=utf-8")
     httpServletResponse.setStatus(HttpServletResponse.SC_OK)
     request.setHandled(true)
+
     httpServletResponse.getWriter.println(
-      <img src={Util.mindfulmachinesDotLink(p.dotFormatDiagram())}></img>
+      if(httpServletRequest.getQueryString != null && request.getQueryString == "active") {
+        GraphFormatter.json(p.activeTasks())
+      } else {
+        GraphFormatter.json(p.allTasks())
+      }
     )
   }
 }

@@ -80,8 +80,8 @@ class TaskTest  extends FunSuite {
   test("testChildren") {
     implicit val p = PeapodGenerator.peapod()
     val t = new TaskB1()
-    assert(t.children == new TaskA1() :: Nil)
-    assert(t.childrenArray().toList == new TaskA1() :: Nil)
+    assert(t.parents == new TaskA1() :: Nil)
+    assert(t.parentsArray().toList == new TaskA1() :: Nil)
   }
 
 

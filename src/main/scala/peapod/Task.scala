@@ -52,7 +52,7 @@ abstract class Task [+T: ClassTag] {
   /**
     * The Tasks which this Task depends on
     */
-  var children: List[Task[_]] = Nil
+  var parents: List[Task[_]] = Nil
 
   /**
     * The directory where this Task's main directory would be stored to disk if it is to be stored to disk. This is the
@@ -85,9 +85,9 @@ abstract class Task [+T: ClassTag] {
   def build(): T
 
   protected def pea[D: ClassTag](t: Task[D]): WrappedTask[D] = {
-    val child = t
-    children = children :+ child
-    new WrappedTask[D](p, child)
+    val parent = t
+    parents = parents :+ parent
+    new WrappedTask[D](p, parent)
   }
 
   /**
@@ -119,7 +119,7 @@ abstract class Task [+T: ClassTag] {
     */
   lazy val recursiveVersion: List[String] = {
     //Sorting first so that changed in ordering of peas doesn't cause new version
-    versionName + ":" + version :: children.sortBy(_.versionName).flatMap(_.recursiveVersion.map("-" + _))
+    versionName + ":" + version :: parents.sortBy(_.versionName).flatMap(_.recursiveVersion.map("-" + _))
   }
 
   /**
@@ -138,7 +138,7 @@ abstract class Task [+T: ClassTag] {
     * @return String representation of the metadata of this task
     */
   def metadata(): String = {
-    val allChildren = children.distinct
+    val allChildren = parents.distinct
     val out =
       description match {
         case "" => name + ":" + version :: Nil
@@ -183,7 +183,7 @@ abstract class Task [+T: ClassTag] {
   /**
     * Helper method that gives the children of this Task as an array
     */
-  def childrenArray() = {
-    children.toArray
+  def parentsArray() = {
+    parents.toArray
   }
 }

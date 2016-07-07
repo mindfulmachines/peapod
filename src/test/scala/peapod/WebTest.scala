@@ -20,9 +20,20 @@ class WebTest extends FunSuite {
   test("Web Server") {
     implicit val p = PeapodGenerator.web()
     Thread.sleep(1000)
-    p(new TaskC())
-    assert(scala.io.Source.fromURL("http://localhost:8080").mkString.trim ==
-      "<img src=\"http://graphvizserver-env.elasticbeanstalk.com/?H4sIAAAAAAAAAEvJTC9KLMhQcFeozstPSVWILs5ILEi1TcqviFUqSE0syE_RC09NCkktLlEJSSzOdlICqiipzEm1TckvKUlNibXmwqbMmThljhjKsKvStcPuFlymYlfvjEO9E2711QpFiXnZtsWJualYnQb0J3bhWkI6HbHrdFSqrQUAc6ngZJMBAAA\"></img>"
+    val t = p(new TaskC())
+    Thread.sleep(1000)
+    assert(scala.io.Source.fromURL("http://localhost:8080/graph").mkString.trim ==
+      """{"nodes":[{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskB"},{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"}]}"""
     )
+    assert(scala.io.Source.fromURL("http://localhost:8080/graph?active").mkString.trim ==
+      """{"nodes":[{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskB"},{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"}]}"""
+    )
+    p(new TaskB()).get()
+    System.gc()
+    Thread.sleep(1000)
+    assert(scala.io.Source.fromURL("http://localhost:8080/graph?active").mkString.trim ==
+      """{"nodes":[{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"}]}"""
+    )
+
   }
 }

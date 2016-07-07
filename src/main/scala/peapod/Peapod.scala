@@ -54,14 +54,14 @@ class Peapod( val path: String,
   protected def setLinkages(t: Task[_], p: Pea[_]): Unit = {
     //TODO: This is hacky, should be moved into the Pea and centralized in terms of the logic location
     if(! p.task.exists) {
-      t.children.foreach(c => generatePea(c).addChild(p))
-      t.children.foreach(c => p.addParent(generatePea(c)))
+      t.parents.foreach(c => generatePea(c).addChild(p))
+      t.parents.foreach(c => p.addParent(generatePea(c)))
     }
   }
 
   protected def addTask(t: Task[_]): Unit = {
     tasks.update(t.name,t)
-    t.children.foreach(addTask)
+    t.parents.foreach(addTask)
   }
 
   protected def generatePea(t: Task[_]): Pea[_] = {
@@ -87,14 +87,31 @@ class Peapod( val path: String,
     * Returns the Peapod's Task's in a DOT format graph
     */
   def dotFormatDiagram(): String = {
-    DotFormatter.format(
+    GraphFormatter.dot(
       tasks.toList.flatMap(
-        d => d._2.children.map(
+        d => d._2.parents.map(
           c => (d._2,c)
         )
       )
     )
   }
+
+  def allTasks(): List[(Task[_],Task[_])] = {
+      tasks.toList.flatMap(
+        d => d._2.parents.map(
+          p => (p, d._2)
+        )
+      )
+  }
+
+  def activeTasks(): List[(Task[_],Task[_])] = {
+    peas.values.toList.flatMap(
+      d => d.parents.map(
+        p => (p.task, d.task)
+      )
+    )
+  }
+
 
   /**
     * Returns the number of Tasks that have been cached by this Peapod instance
