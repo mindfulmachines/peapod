@@ -38,7 +38,13 @@
     }
 </style>
 <body onLoad="tryDraw();">
-    <svg width="1024" height="900"></svg>
+    <p>
+        <a onclick="history.pushState('', 'All Node Graph', '/'); tryDraw()" href="#">All Nodes</a>
+    </p>
+    <p>
+        <a onclick="history.pushState('', 'Active Node Graph', '/?active'); tryDraw()" href="#">Active Nodes</a>
+    </p>
+    <svg width="1024" height="900"><g></g></svg>
     <script src="script.js"></script>
 </body>
 </html>
