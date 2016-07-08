@@ -3,7 +3,7 @@ Peapod
 
 Peapod is a dependency and data pipeline management framework for Spark and Scala. The goals were to provide a framework that is simple to use, automatically saves/loads the output of tasks, and provides support for versioning. It is a work in progress and still very much experimental so new versions may introduce breaking changes.
 
-Please let us know what you think and follow our blog [Teaching Machines](http://www.teachingmachines.io).
+Please let us know what you think and follow our blog [Mindful Machines](http://www.mindfulmachines.io).
 
 # Getting Started
 
