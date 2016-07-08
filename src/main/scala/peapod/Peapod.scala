@@ -87,13 +87,7 @@ class Peapod( val path: String,
     * Returns the Peapod's Task's in a DOT format graph
     */
   def dotFormatDiagram(): String = {
-    GraphFormatter.dot(
-      tasks.toList.flatMap(
-        d => d._2.parents.map(
-          c => (d._2,c)
-        )
-      )
-    )
+    GraphFormatter.dot(allTasks())
   }
 
   def allTasks(): List[(Task[_],Task[_])] = {
@@ -101,7 +95,7 @@ class Peapod( val path: String,
         d => d._2.parents.map(
           p => (p, d._2)
         )
-      )
+      ).sortBy{case (l,r) => l.toString + r.toString}
   }
 
   def activeTasks(): List[(Task[_],Task[_])] = {
@@ -109,7 +103,7 @@ class Peapod( val path: String,
       d => d.parents.map(
         p => (p.task, d.task)
       )
-    )
+    ).sortBy{case (l,r) => l.toString + r.toString}
   }
 
 

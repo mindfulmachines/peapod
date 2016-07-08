@@ -111,18 +111,20 @@ class PeapodTest  extends FunSuite {
     implicit val p = PeapodGenerator.peapod()
     p(new TaskB())
     val dot = p.dotFormatDiagram()
-    assert(dot == "digraph G {node [shape=box]\"peapod.PeapodTest$TaskB\" [style=dotted];\n" +
-      "\"peapod.PeapodTest$TaskA\" [style=dotted];\"peapod.PeapodTest$TaskA\"->\"peapod.PeapodTest$TaskB\"" +
-      ";{ rank=same;\"peapod.PeapodTest$TaskB\"}{ rank=same;\"peapod.PeapodTest$TaskA\"}}")
+    assert(dot ==
+      "digraph G {node [shape=box]\"peapod.PeapodTest$TaskA\" [style=dotted];\n\"peapod.PeapodTest$TaskB\" " +
+        "[style=dotted];\"peapod.PeapodTest$TaskA\"->\"peapod.PeapodTest$TaskB\";" +
+        "{ rank=same;\"peapod.PeapodTest$TaskA\"}{ rank=same;\"peapod.PeapodTest$TaskB\"}}"
+    )
 
-    assert(Util.gravizoDotLink(dot) == "http://g.gravizo.com/g?digraph%20G%20%7Bnode%20%5Bshape%3Dbox%5D%22" +
-      "peapod.PeapodTest%24TaskB%22%20%5Bstyle%3Ddotted%5D%3B%0A%22peapod.PeapodTest%24TaskA%22%20%5Bstyle%3" +
-      "Ddotted%5D%3B%22peapod.PeapodTest%24TaskA%22-%3E%22peapod.PeapodTest%24TaskB%22%3B%7B%20rank%3Dsame%3B%22" +
-      "peapod.PeapodTest%24TaskB%22%7D%7B%20rank%3Dsame%3B%22peapod.PeapodTest%24TaskA%22%7D%7D")
+    assert(Util.gravizoDotLink(dot) == "http://g.gravizo.com/g?digraph%20G%20%7Bnode%20%5Bshape%3Dbox%5D%22peapod." +
+      "PeapodTest%24TaskA%22%20%5Bstyle%3Ddotted%5D%3B%0A%22peapod.PeapodTest%24TaskB%22%20%5Bstyle%3Ddotted%5D%3B" +
+      "%22peapod.PeapodTest%24TaskA%22-%3E%22peapod.PeapodTest%24TaskB%22%3B%7B%20rank%3Dsame%3B%22peapod.PeapodTest" +
+      "%24TaskA%22%7D%7B%20rank%3Dsame%3B%22peapod.PeapodTest%24TaskB%22%7D%7D")
 
-    assert(Util.mindfulmachinesDotLink(dot) == "http://graphvizserver-env.elasticbeanstalk.com/?H4sIAAAAAAAAAEv" +
-      "JTC9KLMhQcFeozstPSVWILs5ILEi1TcqviFUqSE0syE_RCwBTIanFJSohicXZTkpARSWVOam2KfklJakpsdZcOFQ6YqjEqVDXDqdt1tU" +
-      "KRYl52bbFibmpuAxwUqolQpWjUm0tAJr9mSDwAAAA")
+    assert(Util.mindfulmachinesDotLink(dot) == "http://graphvizserver-env.elasticbeanstalk.com/?H4sIAAAAAAAAAEvJTC9KLMh" +
+      "QcFeozstPSVWILs5ILEi1TcqviFUqSE0syE_RCwBTIanFJSohicXZjkpARSWVOam2KfklJakpsdZcOFQ6YajEaaSuHU4zrKsVihLzsm2LE3NTcRt" +
+      "QS4QqJ6XaWgAcspo28AAAAA")
 
   }
 }
