@@ -7,13 +7,17 @@ Please let us know what you think and follow our blog [Mindful Machines](http://
 
 # Getting Started
 
-If you're using maven then just add this or clone the repository (and then run mvn install):
+If you're using maven then just add this:
 ```xml
 <dependency>
     <groupId>io.mindfulmachines</groupId>
     <artifactId>peapod_2.11</artifactId>
     <version>0.8</version>
 </dependency>
+```
+If you're using SBT then just add this or clone the repository:
+```
+libraryDependencies += "io.mindfulmachines" %% "peapod" % "0.8"
 ```
 
 # Using
