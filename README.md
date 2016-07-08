@@ -12,7 +12,7 @@ If you're using maven then just add this or clone the repository (and then run m
 <dependency>
     <groupId>io.teachingmachines</groupId>
     <artifactId>peapod</artifactId>
-    <version>0.9</version>
+    <version>0.8</version>
 </dependency>
 ```
 
