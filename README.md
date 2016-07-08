@@ -16,7 +16,7 @@ If you're using maven then just add this:
 </dependency>
 ```
 If you're using SBT then just add this or clone the repository:
-```
+```scala
 libraryDependencies += "io.mindfulmachines" %% "peapod" % "0.8"
 ```
 
