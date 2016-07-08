@@ -26,13 +26,13 @@ class WebTest extends FunSuite {
       """{"nodes":[{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskB"},{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"}]}"""
     )
     assert(scala.io.Source.fromURL("http://localhost:8080/graph?active").mkString.trim ==
-      """{"nodes":[{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskB"},{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"}]}"""
+      """{"nodes":[{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskB"},{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"}]}"""
     )
     p(new TaskB()).get()
     System.gc()
     Thread.sleep(1000)
     assert(scala.io.Source.fromURL("http://localhost:8080/graph?active").mkString.trim ==
-      """{"nodes":[{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"}]}"""
+      """{"nodes":[{"name":"peapod.WebTest$TaskA","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskB","ephemeral":true,"exists":false},{"name":"peapod.WebTest$TaskC","ephemeral":true,"exists":false}],"edges":[{"nodeA":"peapod.WebTest$TaskA","nodeB":"peapod.WebTest$TaskC"},{"nodeA":"peapod.WebTest$TaskB","nodeB":"peapod.WebTest$TaskC"}]}"""
     )
     p.stop()
 
