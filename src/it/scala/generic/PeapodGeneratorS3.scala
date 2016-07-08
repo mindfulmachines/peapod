@@ -6,13 +6,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import org.apache.hadoop.fs.{FileSystem, Path}
-import peapod.{Peapod, ShutdownHookManager, Web}
+import peapod.{Peapod, Web}
 
 import scala.util.Random
 
-/**
-  * Created by Marcin on 6/15/2016.
-  */
 object PeapodGeneratorS3 {
   def createTempDir(): String = {
     val sdf = new SimpleDateFormat("ddMMyy-hhmmss")
