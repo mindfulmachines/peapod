@@ -11,7 +11,7 @@ If you're using maven then just add this or clone the repository (and then run m
 ```xml
 <dependency>
     <groupId>io.mindfulmachines</groupId>
-    <artifactId>peapod</artifactId>
+    <artifactId>peapod_2.11</artifactId>
     <version>0.8</version>
 </dependency>
 ```
