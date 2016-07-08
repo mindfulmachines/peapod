@@ -71,8 +71,8 @@ pomExtra :=
   </scm>
 
 lazy val root = (project in file(".")).
-  //configs(IntegrationTest).
-  //settings(Defaults.itSettings: _*).
+  configs(IntegrationTest).
+  settings(Defaults.itSettings: _*).
   settings(commonSettings: _*).
   settings(
     name := "Peapod"
