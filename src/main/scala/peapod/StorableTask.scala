@@ -133,7 +133,7 @@ object StorableTask {
       val objReader = new ObjectInputStream(in)
       val obj = objReader.readObject().asInstanceOf[V]
       in.close()
-      filesystem.close()
+      //filesystem.close()
       obj
     }
     def writeStorable(p: Peapod, dir: String) = {
@@ -141,8 +141,9 @@ object StorableTask {
       val out = filesystem.create(new Path(dir + "/serialized.dat"))
       val objWriter = new ObjectOutputStream(out)
       objWriter.writeObject(s)
-      objWriter.close()
-      filesystem.close()
+      objWriter.flush()
+      out.close()
+      //filesystem.close()
     }
   }
 
@@ -162,7 +163,7 @@ object StorableTask {
       val obj = classTag[W].runtimeClass.newInstance().asInstanceOf[W]
       obj.readFields(in)
       in.close()
-      filesystem.close()
+      //filesystem.close()
       wtc(obj)
     }
     def writeStorable(p: Peapod, dir: String) = {
@@ -170,7 +171,7 @@ object StorableTask {
       val out = filesystem.create(new Path(dir + "/serialized.dat"))
       ctw(s).write(out)
       out.close()
-      filesystem.close()
+      //filesystem.close()
     }
   }
 
@@ -261,7 +262,7 @@ abstract class StorableTaskBase[V : ClassTag]
   private def writeSuccess(): Unit = {
     val filesystem = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     filesystem.createNewFile(new Path(dir + "/_SUCCESS"))
-    filesystem.close()
+    //filesystem.close()
   }
 
   private def writeMetaData(): Unit = {
@@ -271,7 +272,7 @@ abstract class StorableTaskBase[V : ClassTag]
     br.write(metadata())
     br.close()
     fo.close()
-    filesystem.close()
+    //filesystem.close()
   }
 
   def delete() {
@@ -304,7 +305,7 @@ abstract class StorableTaskBase[V : ClassTag]
     } else {
       fs.exists(path) && fs.isFile(path)
     }
-    fs.close()
+    //fs.close()
     exists
   }
 }
