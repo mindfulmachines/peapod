@@ -5,6 +5,7 @@ import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import peapod.{Peapod, Web}
 
@@ -20,18 +21,20 @@ object PeapodGeneratorS3 {
     path
   }
 
-  def peapod() = {
+  def peapod(conf: Config  = ConfigFactory.load()) = {
     val path = createTempDir()
     val w = new Peapod(
       path= path,
-      raw="s3n://mindfulmachines-tests/peapod/raw/")(generic.SparkS3.sc)
+      raw="s3n://mindfulmachines-tests/peapod/raw/",
+      conf = conf)(generic.SparkS3.sc)
     w
   }
-  def peapodNonRecursive() = {
+  def peapodNonRecursive(conf: Config  = ConfigFactory.load()) = {
     val path = createTempDir()
     val w = new Peapod(
       path= path,
-      raw="s3n://mindfulmachines-tests/peapod/raw/")(generic.SparkS3.sc) {
+      raw="s3n://mindfulmachines-tests/peapod/raw/",
+      conf = conf)(generic.SparkS3.sc) {
       override val recursiveVersioning = false
     }
     w

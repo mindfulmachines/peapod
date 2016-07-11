@@ -21,6 +21,7 @@ import scala.language.implicitConversions
 object StorableTask {
   /**
     * Helper method for serializing objects into a byte array
+    *
     * @param o Object to be serialized
     * @tparam T Type to be serialized
     * @return Byte array of the serialized object
@@ -36,6 +37,7 @@ object StorableTask {
   /**
     * Helper function for saving and RDD of arbitrary objects to disk with compression, by default Spark only saves
     * RDDs to disk without compression.
+    *
     * @param rdd RDD to be saved in a compressed state
     * @param path The path where the RDD is saved
     */
@@ -48,6 +50,7 @@ object StorableTask {
 
   /**
     * Reads and writes a DataFrame from disc
+    *
     * @param df DataFrame that is being extended
     */
   class DataFrameStorable(df: DataFrame) extends Storable[DataFrame] with Logging {
@@ -86,6 +89,7 @@ object StorableTask {
 
   /**
     * Reads and writes a DataSet from disc
+    *
     * @param ds DataSet that is being extended
     * @tparam W The type of the DataSet that is being stored, must be of type Product
     */
@@ -109,6 +113,7 @@ object StorableTask {
 
   /**
     * Reads and writes a RDD from disc
+    *
     * @param rdd RDD that is being extended
     * @tparam W The type of the RDD that is being stored
     */
@@ -123,6 +128,7 @@ object StorableTask {
 
   /**
     * Reads and writes a Serializable objects from disc
+    *
     * @param s Object that is being extended
     * @tparam V The type of the Object that is being stored, must extend Serializable
     */
@@ -149,6 +155,7 @@ object StorableTask {
 
   /**
     * Reads and writes a Writable objects from disc
+    *
     * @param s Object that is being extended
     * @param ctw Function that converts Objects of type V to a matching Writable of type W
     * @param wtc Function that converts Writables of type W to their matching objects of type V
@@ -242,14 +249,22 @@ trait Storable[V] {
   */
 abstract class StorableTaskBase[V : ClassTag]
   extends Task[V] with Logging  {
+
+  val readthrough = p.conf.getBoolean("peapod.storable.readthrough")
+
   protected def generate: V
   val storable = true
 
   def build(): V = {
-    write(generate)
+    val g= generate
+    write(g)
     writeSuccess()
     writeMetaData()
-    read()
+    if (readthrough) {
+      g
+    } else {
+      read()
+    }
   }
   def load(): V = {
     read()

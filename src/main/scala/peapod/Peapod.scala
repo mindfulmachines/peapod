@@ -23,7 +23,7 @@ import collection.JavaConversions._
   */
 class Peapod( val path: String,
               val raw: String,
-              val conf: Config = ConfigFactory.empty())(_sc : => SparkContext) {
+              val conf: Config = ConfigFactory.load())(_sc : => SparkContext) {
 
   /**
     * Spark Context
