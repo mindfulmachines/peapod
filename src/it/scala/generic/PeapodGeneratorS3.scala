@@ -27,4 +27,13 @@ object PeapodGeneratorS3 {
       raw="s3n://mindfulmachines-tests/peapod/raw/")(generic.SparkS3.sc)
     w
   }
+  def peapodNonRecursive() = {
+    val path = createTempDir()
+    val w = new Peapod(
+      path= path,
+      raw="s3n://mindfulmachines-tests/peapod/raw/")(generic.SparkS3.sc) {
+      override val recursiveVersioning = false
+    }
+    w
+  }
 }

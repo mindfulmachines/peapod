@@ -1,10 +1,10 @@
 package generic
 
-import java.io.File
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import com.google.common.io.Resources
 import org.apache.hadoop.fs.{FileSystem, Path}
 import peapod.{Peapod, Web}
 
@@ -25,14 +25,14 @@ object PeapodGenerator {
     val path = createTempDir()
     val w = new Peapod(
       path= path,
-      raw="")(generic.Spark.sc)
+      raw="file://" + Resources.getResource("raw").getPath)(generic.Spark.sc)
     w
   }
   def peapodNonRecursive() = {
     val path = createTempDir()
     val w = new Peapod(
       path= path,
-      raw="")(generic.Spark.sc) {
+      raw="file://" + Resources.getResource("raw").getPath)(generic.Spark.sc) {
       override val recursiveVersioning = false
     }
     w
@@ -41,7 +41,7 @@ object PeapodGenerator {
     val path = createTempDir()
     val w = new Peapod(
       path= path,
-      raw="")(generic.Spark.sc) with Web
+      raw="file://" + Resources.getResource("raw").getPath)(generic.Spark.sc) with Web
     w
   }
 }

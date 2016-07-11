@@ -9,7 +9,7 @@ lazy val commonSettings = Seq(
 
 crossScalaVersions := Seq("2.10.6", "2.11.8")
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "it,test"
 libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.2" % "provided" exclude("org.apache.hadoop", "hadoop-client")
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "1.6.2" % "provided"
 libraryDependencies += "org.apache.spark" %% "spark-mllib" % "1.6.2" % "provided"
@@ -69,6 +69,8 @@ pomExtra :=
     <developerConnection>scm:git:git@github.com:mindfulmachines/peapod.git</developerConnection>
     <url>git@github.com:mindfulmachines/peapod.git</url>
   </scm>
+
+lazy val IntegrationTest = config("it") extend Test
 
 lazy val root = (project in file(".")).
   configs(IntegrationTest).

@@ -1,6 +1,5 @@
 package peapod
 
-import com.google.common.io.Resources
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
@@ -9,7 +8,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.scalatest.FunSuite
 import StorableTask._
-import generic.PeapodGenerator
 
 object PeapodWorkflowTest {
   var runs = 0
@@ -26,7 +24,7 @@ object PeapodWorkflowTest {
     override val description = "Loading data from dependency.csv"
     def generate = {
       upRuns()
-      p.sc.textFile("file://" + Resources.getResource("dependency.csv").getPath)
+      p.sc.textFile(p.raw + "/dependency.csv")
         .map(_.split(","))
         .map(l => new DependencyInput(l(0).toDouble, l(1)))
     }
@@ -107,9 +105,11 @@ object PeapodWorkflowTest {
 
 }
 
-class PeapodWorkflowTest extends FunSuite {
+abstract class PeapodWorkflowTest extends FunSuite {
+  def generatePeapod(): Peapod
+
   test("testRunWorkflowConcurrentCache") {
-    implicit val w = PeapodGenerator.peapod()
+    implicit val w = generatePeapod()
     PeapodWorkflowTest.runs = 0
     (1 to 10).par.foreach{i => w.pea(new PeapodWorkflowTest.AUC()).get()}
     assert(PeapodWorkflowTest.runs == 5)
@@ -119,7 +119,7 @@ class PeapodWorkflowTest extends FunSuite {
     assert(PeapodWorkflowTest.runs == 0)
   }
   test("testRunWorkflow") {
-    implicit val w = PeapodGenerator.peapod()
+    implicit val w = generatePeapod()
     PeapodWorkflowTest.runs = 0
     w(new PeapodWorkflowTest.PipelineFeature()).get()
     w(new PeapodWorkflowTest.ParsedEphemeral())
@@ -144,7 +144,7 @@ class PeapodWorkflowTest extends FunSuite {
   }
 
   test("testRunWorkflowConcurrent") {
-    implicit val w = PeapodGenerator.peapod()
+    implicit val w = generatePeapod()
     PeapodWorkflowTest.runs = 0
     (1 to 10).par.foreach{i => w.pea(new PeapodWorkflowTest.AUC()).get()}
     assert(PeapodWorkflowTest.runs == 5)

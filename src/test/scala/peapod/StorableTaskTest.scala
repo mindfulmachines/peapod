@@ -87,9 +87,12 @@ object StorableTaskTest {
     }
   }
 }
-class StorableTaskTest extends FunSuite {
+abstract class StorableTaskTest extends FunSuite {
+  def generatePeapod(): Peapod
+  def generatePeapodNonRecursive(): Peapod
+
   test("Delete Old Version") {
-    val p1 = PeapodGenerator.peapod()
+    val p1 = generatePeapod()
     val t1 = new TaskB1()(p1)
     val t2 = new TaskB2()(p1)
     t1.build()
@@ -103,8 +106,8 @@ class StorableTaskTest extends FunSuite {
 
 
   test("Recursive Version") {
-    val p1 = PeapodGenerator.peapod()
-    val p2 = PeapodGenerator.peapod()
+    val p1 = generatePeapod()
+    val p2 = generatePeapod()
     val t1 = new TaskB1()(p1)
     val t2 = new TaskB2()(p2)
     assert(t1.recursiveVersion == "TaskB:1" :: "-TaskA:1" :: Nil)
@@ -116,8 +119,8 @@ class StorableTaskTest extends FunSuite {
   }
 
   test("Recursive Version Latest") {
-    val p1 = PeapodGenerator.peapodNonRecursive()
-    val p2 = PeapodGenerator.peapodNonRecursive()
+    val p1 = generatePeapodNonRecursive()
+    val p2 = generatePeapodNonRecursive()
     val t1 = new TaskB1()(p1)
     val t2 = new TaskB2()(p2)
     assert(t1.recursiveVersion == "TaskB:1" :: "-TaskA:1" :: Nil)
@@ -130,7 +133,7 @@ class StorableTaskTest extends FunSuite {
 
 
   test("SUCCESS file") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val task = new TaskDouble()
     task.build()
     val path = new Path(task.dir + "/_SUCCESS")
@@ -140,7 +143,7 @@ class StorableTaskTest extends FunSuite {
   }
 
   test("Metadata file") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val task = new TaskDouble()
     task.build()
     val path = new Path(task.dir + "/_peapod_metadata")
@@ -153,7 +156,7 @@ class StorableTaskTest extends FunSuite {
   }
 
   test("Storage") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val task = new TaskDouble()
     assert(!task.exists())
     task.build()
@@ -168,7 +171,7 @@ class StorableTaskTest extends FunSuite {
   }
 
   test("StorageLongTerm") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskDouble()
     assert(t.build() == 1.0)
 
@@ -178,55 +181,55 @@ class StorableTaskTest extends FunSuite {
   }
 
   test("Double") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskDouble()
     assert(t.build() == 1.0)
   }
 
   test("Int") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskInt()
     assert(t.build() == 1)
   }
 
   test("Long") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskLong()
     assert(t.build() == 1l)
   }
 
   test("Boolean") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskBoolean()
     assert(t.build())
   }
 
   test("RDD") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskRDD()
     assert(t.build().collect().toList == 1.0 :: 2.0 :: Nil)
   }
 
   test("DF") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskDF()
     assert(t.build().collect().map(_.getAs[Double]("value")).toList == 1.0 :: 2.0 :: Nil)
   }
 
   test("DS") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskDS()
     assert(t.build().collect().map(_.value).toList == 1.0 :: 2.0 :: Nil)
   }
 
   test("Serializable") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p =generatePeapod()
     val t = new TaskSerializable()
     assert(t.build().value == 1.0)
   }
 
   test("Writable") {
-    implicit val p = PeapodGenerator.peapod()
+    implicit val p = generatePeapod()
     val t = new TaskWritable()
     assert(t.build().get() == 1.0)
   }
