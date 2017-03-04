@@ -147,7 +147,6 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
     (
       d match {
         case d: RDD[_] => d.persist(StorageLevel.MEMORY_AND_DISK)
-        case d: DataFrame => d.cache()
         case d: Dataset[_] => d.cache()
         case d: V => d
       }
@@ -158,7 +157,6 @@ class Pea[+D: ClassTag](val task: Task[D]) extends Logging {
     (
       d match {
         case d: RDD[_] => d.unpersist()
-        case d: DataFrame => d.unpersist()
         case d: Dataset[_] => d.unpersist()
         case d: V => d
       }

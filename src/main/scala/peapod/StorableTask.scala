@@ -67,23 +67,6 @@ object StorableTask {
     }
     def writeStorable(p: Peapod, dir: String) = {
       df.write.parquet(dir)
-
-      //This is to deal with a bug where Parquet does not write the metadata files but only throws a Warning
-      val metadata = new Path(dir + "/_metadata")
-      val common = new Path(dir + "/_common_metadata")
-      val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
-      var retry = 0
-      while(retry < 5 &&
-        (!fs.exists(metadata) || !fs.isFile(metadata) || !fs.exists(common) || !fs.isFile(common))) {
-        retry+=1
-        Thread.sleep(10000)
-        logWarning("Rerun starting for " + dir)
-        fs.delete(new Path(dir), true)
-        df.write.parquet(dir)
-      }
-      if (!fs.exists(metadata) || !fs.isFile(metadata) || !fs.exists(common) || !fs.isFile(common)) {
-        new IOException("Could not write Parquet files")
-      }
     }
   }
 
@@ -292,7 +275,11 @@ abstract class StorableTaskBase[V : ClassTag]
 
   def delete() {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
-    fs.delete(new Path(dir), true)
+    try {
+      fs.delete(new Path(dir), true)
+    } catch {
+      case e: Exception =>
+    }
   }
 
   def deleteOtherVersions() {
@@ -309,18 +296,11 @@ abstract class StorableTaskBase[V : ClassTag]
   def exists(): Boolean = {
     val fs = FileSystem.get(new URI(dir), p.sc.hadoopConfiguration)
     val path = new Path(dir + "/_SUCCESS")
-    val exists = if (classTag[V] == classTag[DataFrame]) {
-      //This is to deal with a bug where Parquet does not write the metadata files
-      //This cleans up any directories which were corrupted by the bug
-      val path2 = new Path(dir + "/_metadata")
-      val path3 = new Path(dir + "/_common_metadata")
-      fs.exists(path) && fs.isFile(path) &&
-        fs.exists(path2) && fs.isFile(path2)  &&
-        fs.exists(path3) && fs.isFile(path3)
-    } else {
+    val exists = try {
       fs.exists(path) && fs.isFile(path)
+    } catch {
+      case e:Exception => false
     }
-    //fs.close()
     exists
   }
 }
