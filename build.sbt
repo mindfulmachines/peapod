@@ -58,7 +58,7 @@ pomExtra :=
       <organizationUrl>http://www.mindfulmachines.io</organizationUrl>
     </developer>
     <developer>
-      <name>Zoe Afshar</name>
+      <name>Zoë Frances Weil</name>
       <email>zoe@mindfulmachines.io</email>
       <organization>Mindful Machines</organization>
       <organizationUrl>http://www.mindfulmachines.io</organizationUrl>
